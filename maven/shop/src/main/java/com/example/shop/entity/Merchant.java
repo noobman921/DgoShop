@@ -6,6 +6,6 @@ import lombok.Data;
 public class Merchant {
     private Long merchantId;
     private String merchantName;
-    private String merchantAccount;
-    private String merchantPassword;
+    private String account;
+    private String password;
 }

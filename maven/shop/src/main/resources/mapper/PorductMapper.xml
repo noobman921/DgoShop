@@ -1,0 +1,13 @@
+<select id="selectByMerchantIdPage" resultType="com.example.entity.Product">
+    SELECT * FROM product
+    WHERE merchant_id = #{merchamtId}
+    ORDER BY product_id DESC
+    LIMIT #{offset}, #{limit}
+</select>
+
+<select id="selectByNamePage" resultType="com.example.entity.Product">
+    SELECT * FROM product
+    WHERE product_name LIKE CONCAT('%', #{name}, '%')
+    ORDER BY product_id DESC
+    LIMIT #{offset}, #{limit}
+</select>
