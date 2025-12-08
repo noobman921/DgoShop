@@ -30,6 +30,36 @@ public interface ProductMapper {
         @Options(useGeneratedKeys = true, keyProperty = "productId")
         int insertProduct(Product product);
 
+        /**
+         * 更新商品信息
+         *
+         * @param productId 商品ID
+         * @param quantity  新数量（减少）
+         * @return 影响行数
+         */
+        @Update("UPDATE product SET product_name = #{productName}, product_price = #{productPrice}, " +
+                        "stock = #{stock}, product_pic = #{productPic} WHERE product_id = #{productId}")
+        int updateProductByProductId(Product product);
+
+        /**
+         * 删除商品信息
+         *
+         * @param productId 商品ID
+         * @return 影响行数
+         */
+        @Delete("DELETE FROM product WHERE product_id = #{productId}")
+        int deleteProductByProductId(Long productId);
+
+        /**
+         * 减少商品库存
+         *
+         * @param productId 商品ID
+         * @param quantity  新数量（减少）
+         * @return 影响行数
+         */
+        @Update("UPDATE product SET stock = stock - #{quantity} WHERE product_id = #{productId} AND stock >= #{quantity}")
+        int decreaseStockByProductId(Long productId, Integer quantity);
+
         // ===== 批量操作 =====
         /**
          * 按商家ID查找
@@ -56,4 +86,5 @@ public interface ProductMapper {
                         @Param("name") String name,
                         @Param("offset") Integer offset,
                         @Param("limit") Integer limit);
+
 }
