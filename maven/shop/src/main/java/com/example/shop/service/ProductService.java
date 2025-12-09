@@ -8,6 +8,8 @@ import com.example.shop.entity.Product;
 
 import com.example.shop.mapper.ProductMapper;
 
+import java.util.List;
+
 @Service
 public class ProductService {
 
@@ -18,7 +20,8 @@ public class ProductService {
      * 根据商品ID查询
      * 
      * @param productId 商品主键ID
-     * @return 商品实体
+     * @return 查询成功：商品实体
+     *         查询失败：null
      */
     public Product getProductById(Long productId) {
         // ID不合法
@@ -29,22 +32,61 @@ public class ProductService {
     }
 
     /**
+     * 根据商品名模糊查询
+     * 
+     * @param name   商品名
+     * @param offset 页偏移
+     * @param limit  页限制
+     * @return 查询成功：商品实体列表
+     *         查询失败：null
+     */
+    public List<Product> getProductByNamePage(String name, int offset, int limit) {
+        // 检查参数
+        if (name == null || offset < 0 || limit <= 0) {
+            return null;
+        }
+        List<Product> products = productMapper.selectByNamePage(name, offset, limit);
+        return products;
+    }
+
+    /**
      * 新增商品
      * 
      * @param product 商品实体
      * @return 插入成功：商品ID
-     *         插入失败：null
+     *         参数非法：-1
+     *         插入失败：0
      */
     @Transactional(rollbackFor = Exception.class)
     public Long addProduct(Product product) {
         if (product == null) {
-            return null;
+            return -1L;
         }
         if (productMapper.insertProduct(product) > 0) {
             return product.getProductId();
         }
         // 插入失败
-        return null;
+        return 0L;
+    }
+
+    /**
+     * 更新商品
+     * 
+     * @param product 商品实体
+     * @return 更新成功:商品ID
+     *         参数非法：-1
+     *         更新失败：0
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public Long updateProduct(Product product) {
+        if (product == null) {
+            return -1L;
+        }
+        if (productMapper.updateProductByProductId(product) > 0) {
+            return product.getProductId();
+        }
+        // 插入失败
+        return 0L;
     }
 
     /**
