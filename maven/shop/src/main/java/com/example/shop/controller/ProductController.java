@@ -30,13 +30,13 @@ public class ProductController {
 
     /**
      * 根据商品名称模糊查找
-     * GET /api/product/productName/{productName}/{pageOffset}/{pageNum}
+     * GET /api/product/productName/
      */
     @GetMapping("/productName")
     public Result<PageResultVO<Product>> getProductByName(
-            @RequestParam(required = false) String productName,
+            @RequestParam(required = false) String name,
             @RequestParam(defaultValue = "1") Integer pageNum,
-            @RequestParam(defaultValue = "10") Integer pageSize) {
+            @RequestParam(defaultValue = "8") Integer pageSize) {
         // 参数合法性校验
         if (pageNum < 1) {
             pageNum = 1;
@@ -45,7 +45,7 @@ public class ProductController {
             pageSize = 10;
         }
         // 调用服务层获取分页结果
-        PageResultVO<Product> pageResult = productService.getProductByNamePage(productName, pageNum, pageSize);
+        PageResultVO<Product> pageResult = productService.getProductByNamePage(name, pageNum, pageSize);
         // 返回全局统一响应
         return Result.success(pageResult);
     }
