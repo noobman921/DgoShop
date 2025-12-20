@@ -19,9 +19,9 @@ declare module 'vue-router/auto-routes' {
    */
   export interface RouteNamedMap {
     '/': RouteRecordInfo<'/', '/', Record<never, never>, Record<never, never>>,
-    '/CartView': RouteRecordInfo<'/CartView', '/CartView', Record<never, never>, Record<never, never>>,
-    '/HomeView': RouteRecordInfo<'/HomeView', '/HomeView', Record<never, never>, Record<never, never>>,
-    '/OrdersView': RouteRecordInfo<'/OrdersView', '/OrdersView', Record<never, never>, Record<never, never>>,
+    '/CCartView': RouteRecordInfo<'/CCartView', '/CCartView', Record<never, never>, Record<never, never>>,
+    '/CHomeView': RouteRecordInfo<'/CHomeView', '/CHomeView', Record<never, never>, Record<never, never>>,
+    '/COrdersView': RouteRecordInfo<'/COrdersView', '/COrdersView', Record<never, never>, Record<never, never>>,
   }
 
   /**
@@ -39,16 +39,16 @@ declare module 'vue-router/auto-routes' {
       routes: '/'
       views: never
     }
-    'src/pages/CartView.vue': {
-      routes: '/CartView'
+    'src/pages/CCartView.vue': {
+      routes: '/CCartView'
       views: never
     }
-    'src/pages/HomeView.vue': {
-      routes: '/HomeView'
+    'src/pages/CHomeView.vue': {
+      routes: '/CHomeView'
       views: never
     }
-    'src/pages/OrdersView.vue': {
-      routes: '/OrdersView'
+    'src/pages/COrdersView.vue': {
+      routes: '/COrdersView'
       views: never
     }
   }

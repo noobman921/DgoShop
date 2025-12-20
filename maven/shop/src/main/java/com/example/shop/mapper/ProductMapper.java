@@ -20,6 +20,15 @@ public interface ProductMapper {
         Product selectByProductId(Long productId);
 
         /**
+         * 按名称模糊查找总记录数
+         *
+         * @param name 商品名称（模糊匹配）
+         * @return 符合条件的商品总数
+         */
+        @Select("SELECT COUNT(*) FROM product WHERE name LIKE CONCAT('%', #{name}, '%')")
+        Long selectCountByName(@Param("name") String name);
+
+        /**
          * 插入商品信息
          * 
          * @param product 商品实体

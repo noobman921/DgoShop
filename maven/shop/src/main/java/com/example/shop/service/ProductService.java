@@ -7,6 +7,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.example.shop.entity.Product;
 
 import com.example.shop.mapper.ProductMapper;
+import com.example.shop.vo.PageResultVO;
 
 import java.util.List;
 
@@ -32,21 +33,21 @@ public class ProductService {
     }
 
     /**
-     * 根据商品名模糊查询
-     * 
-     * @param name   商品名
-     * @param offset 页偏移
-     * @param limit  页限制
-     * @return 查询成功：商品实体列表
-     *         查询失败：null
+     * 按名称模糊分页查找（完整分页）
+     *
+     * @param name   商品名称
+     * @param offset 偏移量
+     * @param limit  每页数量
+     * @return 完整的分页结果（列表+总数）
      */
-    public List<Product> getProductByNamePage(String name, int offset, int limit) {
-        // 检查参数
-        if (name == null || offset < 0 || limit <= 0) {
-            return null;
-        }
-        List<Product> products = productMapper.selectByNamePage(name, offset, limit);
-        return products;
+    public PageResultVO<Product> getProductByNamePage(String name, Integer offset, Integer limit) {
+        List<Product> productList = productMapper.selectByNamePage(name, offset, limit);
+
+        Long total = productMapper.selectCountByName(name);
+
+        Integer pageNum = offset / limit + 1;
+
+        return new PageResultVO<>(total, pageNum, limit, productList);
     }
 
     /**

@@ -10,18 +10,18 @@ export function useAppNavigation() {
   const navItems = ref([
     {
       title: '首页',
-      name: 'Home',
-      path: '/',
+      name: 'CHome',
+      path: '/cust',
     },
     {
       title: '购物车',
-      name: 'Cart', 
-      path: '/cart',
+      name: 'CCart', 
+      path: '/cust/cart',
     },
     {
       title: '订单详情',
-      name: 'Orders',
-      path: '/orders',
+      name: 'COrders',
+      path: '/cust/orders',
     }
   ])
 

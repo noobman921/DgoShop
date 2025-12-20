@@ -3,9 +3,13 @@ package com.example.shop.controller;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 import com.example.shop.entity.Product;
 import com.example.shop.service.ProductService;
+
 import com.example.shop.vo.Result;
+import com.example.shop.vo.PageResultVO;
 
 @RestController
 @RequestMapping("/api/product")
@@ -14,18 +18,49 @@ public class ProductController {
     @Autowired
     private ProductService productService;
 
-    @GetMapping("/{productId}")
+    /**
+     * 根据商品ID查找
+     * GET /api/product/productId/{productId}
+     */
+    @GetMapping("/productId/{productId}")
     public Result<Product> getProductById(@PathVariable Long productId) {
         Product product = productService.getProductById(productId);
         return Result.success(product);
     }
 
+    /**
+     * 根据商品名称模糊查找
+     * GET /api/product/productName/{productName}/{pageOffset}/{pageNum}
+     */
+    @GetMapping("/productName")
+    public Result<PageResultVO<Product>> getProductByName(
+            @RequestParam(required = false) String productName,
+            @RequestParam(defaultValue = "1") Integer pageNum,
+            @RequestParam(defaultValue = "10") Integer pageSize) {
+        // 参数合法性校验
+        if (pageNum < 1) {
+            pageNum = 1;
+        }
+        if (pageSize < 1 || pageSize > 100) {
+            pageSize = 10;
+        }
+        // 计算分页偏移量（SQL LIMIT起始值）
+        Integer pageOffset = (pageNum - 1) * pageSize;
+        // 调用服务层获取分页结果
+        PageResultVO<Product> pageResult = productService.getProductByNamePage(productName, pageOffset, pageSize);
+        // 返回全局统一响应
+        return Result.success(pageResult);
+    }
+
+    /**
+     * 增加商品
+     * POST /api/product/add
+     */
     @PostMapping("/add")
     public Result<?> addProduct(@RequestBody Product product) {
-        // 1.
-        // @RequestBody：接收前端传的JSON数据，自动转为Product对象（如{"productName":"小米14","price":3999...}）
+
         Long result = productService.addProduct(product);
-        // 2. 根据Service返回值判断：>0=成功，否则失败
+        // 根据Service返回值判断：>0=成功，否则失败
         return result > 0 ? Result.success("新增商品成功") : Result.fail("新增商品失败");
     }
 
