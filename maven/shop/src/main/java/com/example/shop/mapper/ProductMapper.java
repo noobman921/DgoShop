@@ -26,7 +26,7 @@ public interface ProductMapper {
          * @return 符合条件的商品总数
          */
         @Select("SELECT COUNT(*) FROM product WHERE name LIKE CONCAT('%', #{name}, '%')")
-        Long selectCountByName(@Param("name") String name);
+        Integer selectCountByName(@Param("name") String name);
 
         /**
          * 插入商品信息

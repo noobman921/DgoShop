@@ -35,19 +35,25 @@ public class ProductService {
     /**
      * 按名称模糊分页查找（完整分页）
      *
-     * @param name   商品名称
-     * @param offset 偏移量
-     * @param limit  每页数量
+     * @param name     商品名称
+     * @param pageNo   页数
+     * @param pageSize 每页数量
      * @return 完整的分页结果（列表+总数）
      */
-    public PageResultVO<Product> getProductByNamePage(String name, Integer offset, Integer limit) {
-        List<Product> productList = productMapper.selectByNamePage(name, offset, limit);
+    public PageResultVO<Product> getProductByNamePage(String name, Integer pageNo, Integer pageSize) {
+        if (pageSize == null) {
+            pageSize = 1;
+        }
 
-        Long total = productMapper.selectCountByName(name);
+        Integer offset = (pageNo - 1) * pageSize;
 
-        Integer pageNum = offset / limit + 1;
+        List<Product> productList = productMapper.selectByNamePage(name, offset, pageSize);
 
-        return new PageResultVO<>(total, pageNum, limit, productList);
+        Integer total = productMapper.selectCountByName(name);
+
+        Integer pages = (total + pageSize - 1) / pageSize;
+
+        return new PageResultVO<Product>(total, pages, pageNo, pageSize, productList);
     }
 
     /**

@@ -44,10 +44,8 @@ public class ProductController {
         if (pageSize < 1 || pageSize > 100) {
             pageSize = 10;
         }
-        // 计算分页偏移量（SQL LIMIT起始值）
-        Integer pageOffset = (pageNum - 1) * pageSize;
         // 调用服务层获取分页结果
-        PageResultVO<Product> pageResult = productService.getProductByNamePage(productName, pageOffset, pageSize);
+        PageResultVO<Product> pageResult = productService.getProductByNamePage(productName, pageNum, pageSize);
         // 返回全局统一响应
         return Result.success(pageResult);
     }
