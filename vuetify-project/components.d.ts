@@ -18,5 +18,6 @@ declare module 'vue' {
     LoginDialog: typeof import('./src/components/LoginDialog.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
+    SearchBar: typeof import('./src/components/SearchBar.vue')['default']
   }
 }
