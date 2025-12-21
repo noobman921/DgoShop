@@ -4,6 +4,7 @@ import com.example.shop.entity.User;
 import com.example.shop.mapper.UserMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.Assert;
 
 import java.util.List;
 
@@ -34,6 +35,25 @@ public class UserService {
      */
     public User selectByAccount(String account) {
         return userMapper.selectByAccount(account);
+    }
+
+    /**
+     * 通过用户账号查询用户ID（核心新增方法）
+     * 
+     * @param account 用户账号（唯一）
+     * @return 用户ID（null=账号不存在）
+     */
+    public Long selectUserIdByAccount(String account) {
+        // 检验参数
+        if (account == null) {
+            return null;
+        }
+
+        // 调用Mapper通过账号查用户
+        User user = userMapper.selectByAccount(account);
+
+        // 返回用户ID（不存在则返回null）
+        return user != null ? user.getUserId() : null;
     }
 
     /**

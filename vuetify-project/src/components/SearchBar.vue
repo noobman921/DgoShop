@@ -1,5 +1,5 @@
 <template>
-  <v-row class="mt-8">
+  <v-row>
     <img 
       src="/images/dcrew1.png" 
       alt="商品检索logo"     

@@ -20,7 +20,7 @@ public class ProductController {
 
     /**
      * 根据商品ID查找
-     * GET /api/product/productId/{productId}
+     * GET /api/product/productId
      */
     @GetMapping("/productId")
     public Result<Product> getProductById(@RequestParam Long productId) {

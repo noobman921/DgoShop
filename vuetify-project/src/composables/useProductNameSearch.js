@@ -6,7 +6,7 @@ import axios from 'axios'
  * @returns {Object} 暴露状态和方法给展示层
  */
 export const useProductNameSearch = () => {
-  // 1. 响应式状态（供展示层使用）
+  // 响应式状态（供展示层使用）
   const productList = ref([]) // 商品列表
   const loading = ref(false) // 加载状态
   const currentPage = ref(1) // 当前页
@@ -15,7 +15,7 @@ export const useProductNameSearch = () => {
   const totalPages = ref(0) // 总页数
   const currentKeyword = ref('') // 当前搜索关键词
 
-  // 2. 核心：请求后端商品搜索接口（处理层核心逻辑）
+  // 核心：请求后端商品搜索接口（处理层核心逻辑）
   const fetchProductList = async () => {
     loading.value = true
     try {
