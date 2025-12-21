@@ -16,6 +16,7 @@ declare module 'vue' {
     Guide: typeof import('./src/components/AppNavigation.vue')['default']
     HelloWorld: typeof import('./src/components/HelloWorld.vue')['default']
     LoginDialog: typeof import('./src/components/LoginDialog.vue')['default']
+    ProductList: typeof import('./src/components/ProductList.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     SearchBar: typeof import('./src/components/SearchBar.vue')['default']

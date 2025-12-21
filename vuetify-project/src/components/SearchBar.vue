@@ -56,7 +56,6 @@ const loading = ref(false)
 const emit = defineEmits(['search'])
 
 const handleSearchClick = () => {
-    loading.value = true
     emit('search', keyword.value)
 }
 
