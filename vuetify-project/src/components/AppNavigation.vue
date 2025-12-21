@@ -115,11 +115,12 @@
 import { ref } from 'vue'
 import { onMounted } from 'vue'
 
-onMounted(() => {
-  handleLoginInit();
-})
-
 import { useAppNavigation } from '@/composables/useAppNavigation'
 const { navItems, handleNavClick } = useAppNavigation()
 import {loginStatus, handleLogin, handleLoginInit, handleLoginIn, handleLoginRegister, handleLoginOut} from '@/composables/loginHandle'
+
+onMounted(() => {
+    console.log('test')
+    handleLoginInit();
+})
 </script>

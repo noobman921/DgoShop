@@ -33,7 +33,6 @@ export const useProductNameSearch = () => {
         productList.value = resData.data.list || []
         total.value = resData.data.total || 0
         totalPages.value = resData.data.pages || 0
-        console.log("ok")
       } else {
         throw new Error(resData.msg || '查询商品失败')
       }

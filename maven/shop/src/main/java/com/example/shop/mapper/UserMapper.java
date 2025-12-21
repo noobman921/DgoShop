@@ -43,7 +43,7 @@ public interface UserMapper {
      * @return 插入结果，影响的行数
      */
     @Insert("INSERT INTO user (username, account, password) " +
-            "VALUES (#{username}, #{account}, #{password}")
+            "VALUES (#{username}, #{account}, #{password})")
     @Options(useGeneratedKeys = true, keyProperty = "userId")
     int insertUser(User user);
 }

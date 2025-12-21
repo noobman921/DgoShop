@@ -46,6 +46,16 @@ async function handleLoginIn(){
     }
     } catch (error) {
         console.error('登录失败：', error)
+        loginStatus.value = {
+        ...loginStatus.value,
+        isLogin: false,
+        name: null,
+        loginDialogVisible: true,
+        errorDialogVisible: true,
+        errorDialogMessage:"登录失败",
+        loginName: null,
+        loginPassword: null
+    }
     }
 }
 
@@ -70,10 +80,24 @@ async function handleLoginRegister(){
     }
     } catch (error) {
         console.error('注册失败：', error)
+        loginStatus.value = {
+        ...loginStatus.value,
+        isLogin: false,
+        name: null,
+        loginDialogVisible: true,
+        errorDialogVisible: true,
+        errorDialogMessage:"注册失败",
+        loginName: null,
+        loginPassword: null
+    }
     }
 }
 
 function handleLoginOut(){
+
+    const authStore = useAuthStore()
+    const {userInfo, isLogin, login, register, logout, initAuth } = authStore
+
     logout();
     loginStatus.value = {
         ...loginStatus.value,
@@ -89,14 +113,12 @@ function handleLoginOut(){
 function handleLoginInit(){
 
     const authStore = useAuthStore()
-    const {userInfo, isLogin, login, register, logout, initAuth } = authStore
-
-    initAuth();
-    if(isLogin){
+    authStore.initAuth();
+    if(authStore.userInfo != null){
         loginStatus.value = {
         ...loginStatus.value,
         isLogin: true,
-        name: userInfo.username,
+        name: authStore.userInfo.username,
         loginDialogVisible: false
     }
     }

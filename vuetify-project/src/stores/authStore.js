@@ -19,6 +19,7 @@ export const useAuthStore = defineStore('auth', () => {
         userInfo.value = userData
         isLogin.value = true
         localStorage.setItem('userInfo', JSON.stringify(userData))
+        console.log(userInfo.value)
       } else {
         throw new Error(resData.msg || '登录失败')
       }
