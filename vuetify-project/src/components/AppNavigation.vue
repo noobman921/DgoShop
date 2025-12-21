@@ -52,7 +52,12 @@
                         hint="请输入用户名"
                         clearable
                         required
-                        :rules="[v => !!v.trim() || '用户名不能为空']"
+                        :rules="[
+                            (value) => {
+                            if (!value) return '用户名不能为空';
+                            return value.trim().length > 0 || '用户名不能为空';
+                            }
+                        ]"
                         label="用户名"
                         width="350"
                         density="comfortable"
@@ -63,7 +68,12 @@
                         hint="请输入密码"
                         clearable
                         required
-                        :rules="[v => !!v.trim() || '密码不能为空']"
+                        :rules="[
+                            (value) => {
+                            if (!value) return '用户名不能为空';
+                            return value.trim().length > 0 || '用户名不能为空';
+                            }
+                        ]"
                         label="密码"
                         width="350"
                         density="comfortable"
@@ -103,7 +113,13 @@
 
 <script setup>
 import { ref } from 'vue'
+import { onMounted } from 'vue'
+
+onMounted(() => {
+  handleLoginInit();
+})
+
 import { useAppNavigation } from '@/composables/useAppNavigation'
 const { navItems, handleNavClick } = useAppNavigation()
-import {loginStatus, handleLogin, handleLoginIn, handleLoginRegister, handleLoginOut} from '@/composables/loginHandle'
+import {loginStatus, handleLogin, handleLoginInit, handleLoginIn, handleLoginRegister, handleLoginOut} from '@/composables/loginHandle'
 </script>

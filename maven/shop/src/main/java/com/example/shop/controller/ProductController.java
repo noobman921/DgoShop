@@ -22,8 +22,8 @@ public class ProductController {
      * 根据商品ID查找
      * GET /api/product/productId/{productId}
      */
-    @GetMapping("/productId/{productId}")
-    public Result<Product> getProductById(@PathVariable Long productId) {
+    @GetMapping("/productId")
+    public Result<Product> getProductById(@RequestParam Long productId) {
         Product product = productService.getProductById(productId);
         return Result.success(product);
     }

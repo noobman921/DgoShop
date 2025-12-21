@@ -1,9 +1,9 @@
 <template>
-  <v-row>
+  <v-row class="mt-8">
     <img 
       src="/images/dcrew1.png" 
       alt="商品检索logo"     
-      style="margin-right: 12px;" 
+      style="margin-right: 12px" 
       width="18%"
     >
     <v-container fluid class="py-8 text-center" width="60%">

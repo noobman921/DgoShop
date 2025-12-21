@@ -1,4 +1,8 @@
 import {ref} from 'vue'
+import axios from 'axios'
+
+import { useAuthStore } from '@/stores/authStore'
+
 
 const loginStatus = ref({
     isLogin: false,
@@ -22,29 +26,55 @@ function handleLogin(){
     }
 }
 
-function handleLoginIn(){
-    //后端交互未添加
-    loginStatus.value = {
+async function handleLoginIn(){
+    
+    const authStore = useAuthStore()
+    const {userInfo, isLogin, login, register, logout, initAuth } = authStore
+
+    try {
+        const userData = {
+            username:loginStatus.value.loginName,
+            password:loginStatus.value.loginPassword
+        }
+        await login(userData)
+
+        loginStatus.value = {
         ...loginStatus.value,
         isLogin: true,
         name: loginStatus.value.loginName,
         loginDialogVisible: false
     }
+    } catch (error) {
+        console.error('登录失败：', error)
+    }
 }
 
-function handleLoginRegister(){
-    //后端交互未添加
-    loginStatus.value = {
+async function handleLoginRegister(){
+
+    const authStore = useAuthStore()
+    const {userInfo, isLogin, login, register, logout, initAuth } = authStore
+
+    try {
+        const userData = {
+            username:loginStatus.value.loginName,
+            password:loginStatus.value.loginPassword
+        }
+
+        await register(userData)
+        
+        loginStatus.value = {
         ...loginStatus.value,
-        isLogin: false,
-        name: null,
-        loginDialogVisible: true,
-        errorDialogVisible: true,
-        errorDialogMessage: "注册功能尚未实现，敬请期待！",
+        isLogin: true,
+        name: loginStatus.value.loginName,
+        loginDialogVisible: false
+    }
+    } catch (error) {
+        console.error('注册失败：', error)
     }
 }
 
 function handleLoginOut(){
+    logout();
     loginStatus.value = {
         ...loginStatus.value,
         isLogin: false,
@@ -56,9 +86,26 @@ function handleLoginOut(){
     }
 }
 
+function handleLoginInit(){
+
+    const authStore = useAuthStore()
+    const {userInfo, isLogin, login, register, logout, initAuth } = authStore
+
+    initAuth();
+    if(isLogin){
+        loginStatus.value = {
+        ...loginStatus.value,
+        isLogin: true,
+        name: userInfo.username,
+        loginDialogVisible: false
+    }
+    }
+}
+
 export {
     loginStatus, 
     handleLogin,
+    handleLoginInit,
     handleLoginIn,
     handleLoginRegister,
     handleLoginOut
