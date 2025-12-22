@@ -13,10 +13,33 @@ public interface CartMapper {
          * 根据用户ID查询
          * 
          * @param userId 用户ID
-         * @return 购物车实体
+         * @return 购物车实体列表
          */
         @Select("SELECT * FROM cart WHERE user_id = #{userId}")
         List<Cart> selectByUserId(Long userId);
+
+        /**
+         * 根据用户ID页查询
+         * 
+         * @param userId 用户ID
+         * @param offset 偏移量
+         * @param limit  页限制
+         * @return 购物车实体列表
+         */
+        @Select("SELECT product_id, product_name, quantity FROM cart WHERE user_id = #{userId} LIMIT #{offset}, #{limit}")
+        List<Cart> selectByUserIdWithPage(
+                        @Param("userId") Long userId,
+                        @Param("offset") Integer offset,
+                        @Param("limit") Integer limit);
+
+        /**
+         * 根据用户ID查询购物车记录数
+         * 
+         * @param userId 用户ID
+         * @return 购物车记录数
+         */
+        @Select("SELECT COUNT(*) FROM cart WHERE user_id = #{userId}")
+        Integer countByUserId(@Param("userId") Long userId);
 
         /**
          * 根据商品ID查询

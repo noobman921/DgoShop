@@ -30,6 +30,21 @@ public class CartService {
     }
 
     /**
+     * 根据用户ID页查询
+     * 
+     * @param userId 用户ID
+     * @param offset 偏移量
+     * @param limit  页限制
+     * @return 购物车实体列表
+     */
+    public List<Cart> selectByUserIdWithPage(Long userId, Integer offset, Integer limit) {
+        Assert.notNull(userId, "用户id不能为空");
+        Assert.notNull(offset, "偏移量不能为空");
+        Assert.notNull(limit, "页限制不能为空");
+        return cartMapper.selectByUserIdWithPage(userId, offset, limit);
+    }
+
+    /**
      * 根据商品ID查询购物车列表
      * 
      * @param productId 商品ID
@@ -39,6 +54,17 @@ public class CartService {
         // 参数校验：商品ID不能为空
         Assert.notNull(productId, "商品ID不能为空");
         return cartMapper.selectByProductId(productId);
+    }
+
+    /**
+     * 根据用户ID查询购物车记录数
+     * 
+     * @param userId 用户ID
+     * @return 购物车记录数
+     */
+    public Integer countByUserId(Long userId) {
+        Assert.notNull(userId, "用户ID不能为空");
+        return cartMapper.countByUserId(userId);
     }
 
     /**
