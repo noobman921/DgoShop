@@ -20,4 +20,6 @@ public class CartItemDTO implements Serializable {
     private Integer quantity;
     // 商品单价
     private BigDecimal productPrice;
+    // 商家ID
+    private Long merchantId;
 }

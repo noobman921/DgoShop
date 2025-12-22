@@ -33,7 +33,7 @@ public interface OrderItemMapper {
      * @param orderItem 订单项目实体
      * @return 插入结果，影响的行数
      */
-    @Insert("INSERT INTO product (order_no, product_id, quantity, merchant_id) " +
+    @Insert("INSERT INTO order_item (order_no, product_id, quantity, merchant_id) " +
             "VALUES (#{orderNo}, #{productId}, #{quantity}, #{merchantId})")
     @Options(useGeneratedKeys = true, keyProperty = "id")
     int insertOrderItem(OrderItem orderItem);

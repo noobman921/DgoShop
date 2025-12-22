@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.*;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/cart")
@@ -69,7 +68,7 @@ public class CartController {
             @RequestParam(defaultValue = "1") Integer pageNo,
             @RequestParam(defaultValue = "10") Integer pageSize) {
 
-        // 1. 参数校验
+        // 参数校验
         if (account == null || account.trim().isEmpty()) {
             return Result.fail("用户账号不能为空");
         }
@@ -80,38 +79,39 @@ public class CartController {
             return Result.fail("页尺寸必须在1-100之间");
         }
 
-        // 2. 通过账号查询用户ID
+        // 通过账号查询用户ID
         Long userId = userService.selectUserIdByAccount(account);
         if (userId == null) {
             return Result.fail("用户账号不存在");
         }
 
-        // 3. 核心分页逻辑
-        // 3.1 查询该用户购物车总记录数（用于计算总页数）
+        // 查询该用户购物车总记录数
         Integer total = cartService.countByUserId(userId);
-        // 3.2 计算总页数（向上取整：(总记录数 + 页尺寸 - 1) / 页尺寸）
+        // 计算总页数
         Integer pages = total == 0 ? 0 : (total + pageSize - 1) / pageSize;
-        // 3.3 计算偏移量（offset = (页号-1) * 页尺寸）
+        // 计算偏移量
         Integer offset = (pageNo - 1) * pageSize;
-        // 3.4 分页查询购物车列表
+        // 分页查询购物车列表
         List<Cart> cartList = cartService.selectByUserIdWithPage(userId, offset, pageSize);
 
-        // 4. 转换为CartItemDTO列表（通过ProductService获取商品名称）
+        // 转换为CartItemDTO列表
         List<CartItemDTO> cartItemDTOList = new ArrayList<>();
         for (Cart cart : cartList) {
             Long productId = cart.getProductId();
             Product product = productService.getProductById(productId);
             String productName = product != null ? product.getProductName() : "未知商品";
             BigDecimal productPrice = product != null ? product.getProductPrice() : new BigDecimal("0.00");
+            Long merchantId = product != null ? product.getMerchantId() : 0;
             CartItemDTO dto = new CartItemDTO();
             dto.setProductId(productId);
             dto.setProductName(productName);
             dto.setQuantity(cart.getQuantity());
             dto.setProductPrice(productPrice);
+            dto.setMerchantId(merchantId);
             cartItemDTOList.add(dto);
         }
 
-        // 5. 封装PageResultVO
+        // 封装PageResultVO
         PageResultVO<CartItemDTO> pageResultVO = new PageResultVO<>();
         pageResultVO.setTotal(total); // 总记录数
         pageResultVO.setPages(pages); // 总页数
@@ -119,7 +119,7 @@ public class CartController {
         pageResultVO.setPageSize(pageSize); // 当前页尺寸
         pageResultVO.setList(cartItemDTOList); // 分页数据列表
 
-        // 6. 返回结果（PageResultVO作为Result的data）
+        // 返回结果
         return Result.success(pageResultVO);
     }
 

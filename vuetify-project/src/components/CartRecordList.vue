@@ -2,7 +2,7 @@
   <v-container fluid class="py-4 px-2">
     <!-- 加载状态 -->
     <v-progress-linear
-      v-if="loading"
+      v-if="loading || orderLoading"
       color="primary"
       indeterminate
       class="my-2"
@@ -103,7 +103,7 @@
             <v-btn
               color="primary"
               @click="confirmOperation"
-              :disabled="selectedProductIds.length === 0"
+              :disabled="selectedProductIds.length === 0 || orderLoading"
             >
               确定
             </v-btn>
@@ -127,6 +127,8 @@ const total = ref(0)
 const totalPages = ref(0)
 const loading = ref(false)
 const currentAccount = ref('')
+// 新增：订单创建加载状态
+const orderLoading = ref(false)
 
 // 2. 格式化价格（兜底处理，避免数值解析错误）
 const formatPrice = (price) => {
@@ -253,17 +255,66 @@ const deleteSelectedItems = async () => {
   }
 }
 
-// 10. 确定操作
-const confirmOperation = () => {
-  if (selectedProductIds.value.length === 0) return
+// 10. 核心修改：确定操作（创建订单）
+const confirmOperation = async () => {
+  if (selectedProductIds.value.length === 0 || orderLoading.value) return
+  
+  // 1. 获取选中的购物车商品
   const selectedItems = cartList.value.filter(item => 
     selectedProductIds.value.includes(item.productId)
   )
+  
+  // 2. 校验商品是否包含商家ID（OrderItem必需）
+  const invalidItems = selectedItems.filter(item => !item.merchantId || item.merchantId <= 0)
+  if (invalidItems.length > 0) {
+    alert(`选中的商品中有${invalidItems.length}件缺少商家信息，无法创建订单！`)
+    return
+  }
+
+  // 3. 计算总金额（保留原有提示）
   const totalAmount = selectedItems.reduce((sum, item) => {
     return sum + Number(item.quantity) * Number(item.productPrice)
   }, 0)
   
-  alert(`你选中了 ${selectedItems.length} 件商品，总金额：¥${formatPrice(totalAmount)}`)
+  // 4. 确认创建订单
+  if (!confirm(`你选中了 ${selectedItems.length} 件商品，总金额：¥${formatPrice(totalAmount)}\n是否确认创建订单？`)) {
+    return
+  }
+
+  // 5. 构造订单请求参数
+  const orderRequest = {
+    userAccount: currentAccount.value,
+    orderItemList: selectedItems.map(item => ({
+      productId: item.productId,
+      quantity: item.quantity,
+      merchantId: item.merchantId // 购物车商品需包含商家ID
+    }))
+  }
+
+  // 6. 发起创建订单请求
+  orderLoading.value = true
+  try {
+    const baseURL = 'http://localhost:8080'
+    const response = await axios.post(`${baseURL}/api/order/add`, orderRequest)
+    const resData = response.data
+
+    if (resData?.code === 200) {
+      alert(`订单创建成功！\n${resData.msg || '订单号：未知'}\n为你清空选中的购物车商品`)
+      // 创建订单成功后，删除选中的购物车商品
+      await deleteSelectedItems()
+    } else {
+      alert(`创建订单失败：${resData?.msg || '未知错误'}`)
+    }
+  } catch (error) {
+    console.error('创建订单异常：', error)
+    if (error.message.includes('Network Error')) {
+      alert('网络错误，请检查后端订单服务是否启动！')
+    } else {
+      alert('创建订单失败，请重试！')
+    }
+  } finally {
+    orderLoading.value = false
+  }
 }
 
 // 11. 监听localStorage中用户信息变化（跨标签页切换账号）
