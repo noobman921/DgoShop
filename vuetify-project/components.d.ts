@@ -13,9 +13,8 @@ declare module 'vue' {
   export interface GlobalComponents {
     AppFooter: typeof import('./src/components/AppFooter.vue')['default']
     AppNavigation: typeof import('./src/components/AppNavigation.vue')['default']
-    Guide: typeof import('./src/components/AppNavigation.vue')['default']
+    CartRecordList: typeof import('./src/components/CartRecordList.vue')['default']
     HelloWorld: typeof import('./src/components/HelloWorld.vue')['default']
-    LoginDialog: typeof import('./src/components/LoginDialog.vue')['default']
     ProductList: typeof import('./src/components/ProductList.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']

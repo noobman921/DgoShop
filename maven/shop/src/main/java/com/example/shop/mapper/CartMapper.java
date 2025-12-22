@@ -26,7 +26,7 @@ public interface CartMapper {
          * @param limit  页限制
          * @return 购物车实体列表
          */
-        @Select("SELECT product_id, product_name, quantity FROM cart WHERE user_id = #{userId} LIMIT #{offset}, #{limit}")
+        @Select("SELECT product_id, user_id, quantity FROM cart WHERE user_id = #{userId} LIMIT #{offset}, #{limit}")
         List<Cart> selectByUserIdWithPage(
                         @Param("userId") Long userId,
                         @Param("offset") Integer offset,

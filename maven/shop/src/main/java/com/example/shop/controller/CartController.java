@@ -11,6 +11,7 @@ import com.example.shop.vo.CartItemDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -101,12 +102,12 @@ public class CartController {
             Long productId = cart.getProductId();
             Product product = productService.getProductById(productId);
             String productName = product != null ? product.getProductName() : "未知商品";
-
+            BigDecimal productPrice = product != null ? product.getProductPrice() : new BigDecimal("0.00");
             CartItemDTO dto = new CartItemDTO();
             dto.setProductId(productId);
             dto.setProductName(productName);
             dto.setQuantity(cart.getQuantity());
-
+            dto.setProductPrice(productPrice);
             cartItemDTOList.add(dto);
         }
 

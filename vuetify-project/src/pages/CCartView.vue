@@ -1,7 +1,12 @@
 <!-- views/CartView.vue -->
 <template>
   <v-container>
-    <h1>购物车</h1>
-    <p>这里是您的购物车</p>
+    <cart-record-list></cart-record-list>
   </v-container>
 </template>
+
+<script setup>
+import CartRecordList from '@/components/CartRecordList.vue';
+
+
+</script>
