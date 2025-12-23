@@ -1,5 +1,6 @@
 <!-- src/views/ProductSearchPage.vue -->
 <template>
+  <AppNavigation></AppNavigation>
   <v-container fluid class="py-4">
     <!-- 1. 搜索栏（独立组件） -->
     <SearchBar ref="searchBarRef" @search="handleSearchWrapper" />

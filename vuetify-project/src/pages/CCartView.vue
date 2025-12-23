@@ -1,6 +1,7 @@
 <!-- views/CartView.vue -->
 <template>
   <v-container>
+    <AppNavigation></AppNavigation>
     <cart-record-list></cart-record-list>
   </v-container>
 </template>

@@ -56,8 +56,8 @@ public interface CartMapper {
          * @param cart 购物车实体
          * @return 插入结果，影响的行数
          */
-        @Insert("INSERT INTO cart (user_id, product_id, quantity) " +
-                        "VALUES (#{userId}, #{productId}, #{quantity})")
+        @Insert("INSERT INTO cart (user_id, product_id, quantity) VALUES (#{userId}, #{productId}, #{quantity}) " +
+                        "ON DUPLICATE KEY UPDATE quantity = quantity + #{quantity}")
         int insertCart(Cart cart);
 
         /**

@@ -1,18 +1,17 @@
 package com.example.shop.vo;
 
-import com.example.shop.entity.OrderItem;
 import com.example.shop.entity.OrderMain;
 import lombok.Data;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 /**
- * 订单详情VO（对应购物车项VO的结构，单条订单数据）
+ * 订单详情VO（适配合并后的订单项VO）
  */
 @Data
 public class OrderDetailVO {
-    // 订单主信息（对应购物车项的主信息）
-    private OrderMain orderMain;
-    // 该订单下的所有商品项（对应购物车项的商品列表）
-    private List<OrderItem> orderItemList;
+    private OrderMain orderMain; // 订单主信息
+    private List<OrderItemVO> itemList; // 合并后的订单项列表
+    private BigDecimal totalPrice; // 订单总价格
 }
