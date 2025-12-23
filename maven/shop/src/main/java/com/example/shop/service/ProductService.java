@@ -9,6 +9,7 @@ import com.example.shop.entity.Product;
 import com.example.shop.mapper.ProductMapper;
 import com.example.shop.vo.PageResultVO;
 
+import java.util.Collections;
 import java.util.List;
 
 @Service
@@ -140,5 +141,39 @@ public class ProductService {
         }
         // 操作失败
         return 0L;
+    }
+
+    /**
+     * 按商家ID分页查询商品（每页默认10条）
+     *
+     * @param merchantId 商家ID
+     * @param pageNo     页数（从1开始）
+     * @param pageSize   每页数量（默认10）
+     * @return 完整分页结果（列表+总数）
+     */
+    public PageResultVO<Product> getProductByMerchantIdPage(Long merchantId, Integer pageNo, Integer pageSize) {
+        // 1. 参数校验 & 兜底
+        if (merchantId == null || merchantId <= 0) {
+            return new PageResultVO<>(0, 0, pageNo, pageSize, Collections.emptyList());
+        }
+        if (pageNo == null || pageNo < 1) {
+            pageNo = 1;
+        }
+        if (pageSize == null || pageSize < 1) {
+            pageSize = 10; // 默认每页10条
+        }
+
+        // 2. 计算偏移量
+        Integer offset = (pageNo - 1) * pageSize;
+
+        // 3. 查询列表 + 总数
+        List<Product> productList = productMapper.selectByMerchantIdPage(merchantId, offset, pageSize);
+        Integer total = productMapper.selectCountByMerchantId(merchantId);
+
+        // 4. 计算总页数
+        Integer pages = total == 0 ? 0 : (total + pageSize - 1) / pageSize;
+
+        // 5. 返回统一分页VO
+        return new PageResultVO<>(total, pages, pageNo, pageSize, productList);
     }
 }

@@ -4,7 +4,6 @@ import com.example.shop.entity.Product;
 import org.apache.ibatis.annotations.*;
 import org.springframework.stereotype.Repository;
 
-// import java.math.BigDecimal;
 import java.util.List;
 
 @Mapper
@@ -29,6 +28,15 @@ public interface ProductMapper {
         Integer selectCountByName(@Param("name") String name);
 
         /**
+         * 按商家ID统计商品总数
+         *
+         * @param merchantId 商家ID
+         * @return 该商家下的商品总数
+         */
+        @Select("SELECT COUNT(*) FROM product WHERE merchant_id = #{merchantId}")
+        Integer selectCountByMerchantId(@Param("merchantId") Long merchantId);
+
+        /**
          * 插入商品信息
          * 
          * @param product 商品实体
@@ -42,8 +50,7 @@ public interface ProductMapper {
         /**
          * 更新商品信息
          *
-         * @param productId 商品ID
-         * @param quantity  新数量（减少）
+         * @param product 商品实体（含productId及待更新字段）
          * @return 影响行数
          */
         @Update("UPDATE product SET product_name = #{productName}, product_price = #{productPrice}, " +
@@ -63,7 +70,7 @@ public interface ProductMapper {
          * 减少商品库存
          *
          * @param productId 商品ID
-         * @param quantity  新数量（减少）
+         * @param quantity  减少的数量
          * @return 影响行数
          */
         @Update("UPDATE product SET stock = stock - #{quantity} WHERE product_id = #{productId} AND stock >= #{quantity}")
@@ -71,29 +78,30 @@ public interface ProductMapper {
 
         // ===== 批量操作 =====
         /**
-         * 按商家ID查找
+         * 按商家ID分页查找商品
          *
          * @param merchantId 商家ID
          * @param offset     偏移量
          * @param limit      每页数量
-         * @return 商品页
+         * @return 商品分页列表
          */
+        @Select("SELECT * FROM product WHERE merchant_id = #{merchantId} LIMIT #{offset}, #{limit}")
         List<Product> selectByMerchantIdPage(
                         @Param("merchantId") Long merchantId,
                         @Param("offset") Integer offset,
                         @Param("limit") Integer limit);
 
         /**
-         * 按名称模糊查找页
+         * 按名称模糊分页查找商品
          *
-         * @param merchantId 商家ID
-         * @param offset     偏移量
-         * @param limit      每页数量
-         * @return 商品页
+         * @param name   商品名称（模糊匹配）
+         * @param offset 偏移量
+         * @param limit  每页数量
+         * @return 商品分页列表
          */
+        @Select("SELECT * FROM product WHERE product_name LIKE CONCAT('%', #{name}, '%') LIMIT #{offset}, #{limit}")
         List<Product> selectByNamePage(
                         @Param("name") String name,
                         @Param("offset") Integer offset,
                         @Param("limit") Integer limit);
-
 }

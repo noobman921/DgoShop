@@ -43,7 +43,7 @@ public interface MerchantMapper {
      * @return 插入结果，影响的行数
      */
     @Insert("INSERT INTO merchant (merchant_name, account, password) " +
-            "VALUES (#{merchantName}, #{account}, #{password}")
+            "VALUES (#{merchantName}, #{account}, #{password})")
     @Options(useGeneratedKeys = true, keyProperty = "merchantId")
     int insertMerchant(Merchant merchant);
 }

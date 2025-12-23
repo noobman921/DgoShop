@@ -148,15 +148,15 @@ public class OrderMainService {
      */
     @Transactional(rollbackFor = Exception.class)
     public OrderMain addOrderMain(Long userId) {
-        // 1. 调用内嵌的生成方法，生成唯一订单号（作为主键）
+        // 调用内嵌的生成方法，生成唯一订单号（作为主键）
         String orderNo = this.generateOrderNo();
 
-        // 2. 封装订单主实体（仅赋值orderNo和userId）
+        // 封装订单主实体（仅赋值orderNo和userId）
         OrderMain orderMain = new OrderMain();
         orderMain.setOrderNo(orderNo); // 主键赋值
         orderMain.setUserId(userId);
 
-        // 3. 插入数据库
+        // 插入数据库
         int affectRows = orderMainMapper.insertOrderMain(orderMain);
         if (affectRows <= 0) {
             log.error("插入订单主信息失败：主键orderNo={}，userId={}", orderNo, userId);

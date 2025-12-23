@@ -57,11 +57,75 @@ public class OrderItemService {
         // 数据库操作 + 异常捕获 + 结果兜底
         try {
             List<OrderItem> orderItemList = orderItemMapper.selectByOrderNo(orderNo);
-            // 兜底：查询结果为null时返回空列表
+            // 查询结果为null时返回空列表
             return CollectionUtils.isEmpty(orderItemList) ? Collections.emptyList() : orderItemList;
         } catch (Exception e) {
             log.error("根据订单号{}查询订单项目列表失败", orderNo, e);
             return Collections.emptyList();
+        }
+    }
+
+    /**
+     * 按商家ID分页查询订单项列表
+     *
+     * @param merchantId 商家ID
+     * @param pageNum    当前页码（从1开始）
+     * @param pageSize   每页数量
+     * @return 分页订单项列表（无数据返回空列表）
+     */
+    public List<OrderItem> listByMerchantIdPage(Long merchantId, Integer pageNum, Integer pageSize) {
+        // 多维度参数合法性校验（与现有代码风格一致）
+        if (merchantId == null || merchantId <= 0) {
+            log.error("按商家ID分页查询订单项失败：商家ID不合法，merchantId={}", merchantId);
+            return Collections.emptyList();
+        }
+        if (pageNum == null || pageNum < 1) {
+            log.error("按商家ID分页查询订单项失败：页码不合法，pageNum={}", pageNum);
+            return Collections.emptyList();
+        }
+        if (pageSize == null || pageSize < 1) {
+            log.error("按商家ID分页查询订单项失败：每页数量不合法，pageSize={}", pageSize);
+            return Collections.emptyList();
+        }
+
+        // 计算分页偏移量（offset = (页码-1)*每页数量）
+        Integer offset = (pageNum - 1) * pageSize;
+        log.info("按商家ID分页查询订单项：merchantId={}，pageNum={}，pageSize={}，offset={}",
+                merchantId, pageNum, pageSize, offset);
+
+        // 数据库操作
+        try {
+            List<OrderItem> orderItemList = orderItemMapper.selectByMerchantIdPage(merchantId, offset, pageSize);
+            // 查询结果为null时返回空列表
+            return CollectionUtils.isEmpty(orderItemList) ? Collections.emptyList() : orderItemList;
+        } catch (Exception e) {
+            log.error("按商家ID{}分页查询订单项失败（pageNum={}，pageSize={}）",
+                    merchantId, pageNum, pageSize, e);
+            return Collections.emptyList();
+        }
+    }
+
+    /**
+     * 统计商家ID对应的订单项总数
+     *
+     * @param merchantId 商家ID
+     * @return 订单项总数（参数不合法/异常时返回0）
+     */
+    public Integer countByMerchantId(Long merchantId) {
+        // 参数合法性校验
+        if (merchantId == null || merchantId <= 0) {
+            log.error("统计商家订单项总数失败：商家ID不合法，merchantId={}", merchantId);
+            return 0;
+        }
+
+        // 数据库操作
+        try {
+            Integer total = orderItemMapper.countByMerchantId(merchantId);
+            // 查询结果为null时返回0
+            return total == null ? 0 : total;
+        } catch (Exception e) {
+            log.error("统计商家ID{}的订单项总数失败", merchantId, e);
+            return 0;
         }
     }
 
@@ -124,11 +188,10 @@ public class OrderItemService {
             return;
         }
 
-        // 1. 遍历校验+绑定外键orderNo
+        // 遍历校验+绑定外键orderNo
         for (OrderItem item : orderItemList) {
             item.setOrderNo(orderNo); // 绑定外键
 
-            // 强化校验：merchantId是必传且合法的
             if (item.getMerchantId() == null || item.getMerchantId() <= 0) {
                 throw new RuntimeException(
                         "订单项目的商家ID不合法：productId=" + item.getProductId() + "，merchantId=" + item.getMerchantId());
@@ -142,7 +205,7 @@ public class OrderItemService {
             }
         }
 
-        // 2. 批量插入
+        // 批量插入
         int successCount = 0;
         for (OrderItem item : orderItemList) {
             int affectRows = orderItemMapper.insertOrderItem(item);
