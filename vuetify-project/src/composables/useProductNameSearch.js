@@ -31,6 +31,7 @@ export const useProductNameSearch = () => {
       const resData = response.data
       if (resData.code === 200) { // 匹配后端成功码
         productList.value = resData.data.list || []
+        console.log(productList.value)
         total.value = resData.data.total || 0
         totalPages.value = resData.data.pages || 0
       } else {
