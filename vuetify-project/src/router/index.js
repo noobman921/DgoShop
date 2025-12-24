@@ -21,6 +21,26 @@ const routes = [
     path: '/cust/orders',
     name: 'COrders',
     component: () => import('@/pages/COrdersView.vue')
+  },
+  {
+    path: '/merchant',
+    name: 'MHome',
+    component: () => import('@/pages/MLoginView.vue')
+  },
+  {
+    path: '/merchant/login',
+    name: 'MLogin',
+    component: () => import('@/pages/MLoginView.vue')
+  },
+  {
+    path: '/merchant/order', 
+    name: 'MerchantOrder',
+    component: () => import('@/pages/MOrderView.vue')
+  },
+  {
+    path: '/merchant/product', 
+    name: 'MerchantProduct',
+    component: () => import('@/pages/MProductView.vue')
   }
 ]
 

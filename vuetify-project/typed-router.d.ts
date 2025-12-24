@@ -22,6 +22,9 @@ declare module 'vue-router/auto-routes' {
     '/CCartView': RouteRecordInfo<'/CCartView', '/CCartView', Record<never, never>, Record<never, never>>,
     '/CHomeView': RouteRecordInfo<'/CHomeView', '/CHomeView', Record<never, never>, Record<never, never>>,
     '/COrdersView': RouteRecordInfo<'/COrdersView', '/COrdersView', Record<never, never>, Record<never, never>>,
+    '/MLoginView': RouteRecordInfo<'/MLoginView', '/MLoginView', Record<never, never>, Record<never, never>>,
+    '/MOrderView': RouteRecordInfo<'/MOrderView', '/MOrderView', Record<never, never>, Record<never, never>>,
+    '/MProductView': RouteRecordInfo<'/MProductView', '/MProductView', Record<never, never>, Record<never, never>>,
   }
 
   /**
@@ -49,6 +52,18 @@ declare module 'vue-router/auto-routes' {
     }
     'src/pages/COrdersView.vue': {
       routes: '/COrdersView'
+      views: never
+    }
+    'src/pages/MLoginView.vue': {
+      routes: '/MLoginView'
+      views: never
+    }
+    'src/pages/MOrderView.vue': {
+      routes: '/MOrderView'
+      views: never
+    }
+    'src/pages/MProductView.vue': {
+      routes: '/MProductView'
       views: never
     }
   }

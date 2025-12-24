@@ -67,7 +67,7 @@ public interface ProductMapper {
         int deleteProductByProductId(Long productId);
 
         /**
-         * 减少商品库存
+         * 减少商品库存（保留原有方法，新增下方「更新库存」方法）
          *
          * @param productId 商品ID
          * @param quantity  减少的数量
@@ -75,6 +75,21 @@ public interface ProductMapper {
          */
         @Update("UPDATE product SET stock = stock - #{quantity} WHERE product_id = #{productId} AND stock >= #{quantity}")
         int decreaseStockByProductId(Long productId, Integer quantity);
+
+        /**
+         * 更新商品库存（直接设置库存值，带乐观锁校验防超卖）
+         * 
+         * @param productId 商品ID
+         * @param newStock  新库存值（计算后的值：当前库存 - 购买数量）
+         * @param oldStock  更新前的库存值（用于校验，防止并发修改）
+         * @return 影响行数（1=成功，0=库存已被修改/不足）
+         */
+        @Update("UPDATE product SET stock = #{newStock} " +
+                        "WHERE product_id = #{productId} AND stock = #{oldStock} AND #{newStock} >= 0")
+        int updateStockByProductId(
+                        @Param("productId") Long productId,
+                        @Param("newStock") Integer newStock,
+                        @Param("oldStock") Integer oldStock);
 
         // ===== 批量操作 =====
         /**

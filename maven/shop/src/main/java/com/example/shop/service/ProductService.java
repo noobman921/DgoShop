@@ -5,13 +5,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.example.shop.entity.Product;
-
 import com.example.shop.mapper.ProductMapper;
 import com.example.shop.vo.PageResultVO;
 
+import lombok.extern.slf4j.Slf4j; // 新增日志依赖，便于排查问题
 import java.util.Collections;
 import java.util.List;
 
+@Slf4j // 新增日志注解
 @Service
 public class ProductService {
 
@@ -121,26 +122,49 @@ public class ProductService {
     }
 
     /**
-     * 更新商品库存
+     * 重构：更新商品库存（替代直接减库存，保留原方法名和返回值规则）
      * 
      * @param productId 商品ID
-     * @param quantity  更新数量
+     * @param quantity  要扣减的数量（正数）
      * @return 更新成功：商品ID
      *         参数非法：-1
-     *         更新失败：0
+     *         更新失败：0（库存不足/商品不存在/并发修改）
      */
     @Transactional(rollbackFor = Exception.class)
     public Long decreaseStock(Long productId, Integer quantity) {
-        // 检验参数
-        if (productId == null || productId <= 0 || quantity == null) {
+        // 1. 参数校验（保留原规则）
+        if (productId == null || productId <= 0 || quantity == null || quantity <= 0) {
+            log.warn("库存更新失败：参数非法（productId={}, quantity={}）", productId, quantity);
             return -1L;
         }
-        // 更新
-        if (productMapper.decreaseStockByProductId(productId, quantity) > 0) {
-            return productId;
+
+        // 2. 查询商品及当前库存
+        Product product = productMapper.selectByProductId(productId);
+        if (product == null) {
+            log.error("库存更新失败：商品ID={}不存在", productId);
+            return 0L;
         }
-        // 操作失败
-        return 0L;
+        Integer currentStock = product.getStock();
+
+        // 3. 校验库存是否充足
+        if (currentStock < quantity) {
+            log.error("库存更新失败：商品ID={}库存不足（当前{}，需扣减{}）", productId, currentStock, quantity);
+            return 0L;
+        }
+
+        // 4. 计算新库存
+        Integer newStock = currentStock - quantity;
+
+        // 5. 执行库存更新（带并发校验：仅当更新前库存未变时生效）
+        int updateCount = productMapper.updateStockByProductId(productId, newStock, currentStock);
+        if (updateCount == 0) {
+            log.warn("库存更新失败：商品ID={}库存已被其他请求修改（更新前库存：{}）", productId, currentStock);
+            return 0L;
+        }
+
+        // 6. 更新成功，返回商品ID（保留原返回规则）
+        log.info("商品ID={}库存更新成功：原{} → 新{}", productId, currentStock, newStock);
+        return productId;
     }
 
     /**
