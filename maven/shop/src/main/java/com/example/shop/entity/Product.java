@@ -12,4 +12,5 @@ public class Product {
     private String productPic;
     private BigDecimal productPrice;
     private Long merchantId;
+    private Integer isOnShelf = 1;
 }

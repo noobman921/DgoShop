@@ -54,7 +54,7 @@ public interface ProductMapper {
          * @return 影响行数
          */
         @Update("UPDATE product SET product_name = #{productName}, product_price = #{productPrice}, " +
-                        "stock = #{stock}, product_pic = #{productPic} WHERE product_id = #{productId}")
+                        "stock = #{stock}, product_pic = #{productPic}, is_on_shelf = #{isOnShelf} WHERE product_id = #{productId}")
         int updateProductByProductId(Product product);
 
         /**
@@ -114,7 +114,7 @@ public interface ProductMapper {
          * @param limit  每页数量
          * @return 商品分页列表
          */
-        @Select("SELECT * FROM product WHERE product_name LIKE CONCAT('%', #{name}, '%') LIMIT #{offset}, #{limit}")
+        @Select("SELECT * FROM product WHERE product_name LIKE CONCAT('%', #{name}, '%') AND is_on_shelf = 1 LIMIT #{offset}, #{limit} ")
         List<Product> selectByNamePage(
                         @Param("name") String name,
                         @Param("offset") Integer offset,
