@@ -22,6 +22,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -40,6 +44,12 @@ public class OrderController {
     private OrderItemService orderItemService;
     @Autowired
     private ProductService productService; // 已注入，直接使用
+
+    @Autowired(required = false)
+    private JavaMailSender mailSender;
+
+    @Value("${spring.mail.username:}")
+    private String mailFrom;
 
     @GetMapping("/page")
     public Result<PageResultVO<OrderDetailVO>> getOrderPage(
@@ -148,6 +158,62 @@ public class OrderController {
         } catch (Exception e) {
             log.error("用户{}新增订单异常", requestVO != null ? requestVO.getUserAccount() : "未知", e);
             return Result.fail("新增订单失败：" + e.getMessage());
+        }
+    }
+
+    // 简单的发货邮件接口，前端传 { toEmail, orderId }
+    @PostMapping("/sendShipmentEmail")
+    public Result<String> sendShipmentEmail(@RequestBody SendEmailRequest req) {
+        try {
+            if (req == null || req.getToEmail() == null || req.getToEmail().trim().isEmpty()) {
+                log.warn("发送发货邮件失败：目标邮箱为空");
+                return Result.fail("目标邮箱不能为空");
+            }
+            if (req.getOrderId() == null || req.getOrderId().toString().trim().isEmpty()) {
+                log.warn("发送发货邮件失败：订单号为空");
+                return Result.fail("订单号不能为空");
+            }
+
+            if (mailSender == null) {
+                log.warn("JavaMailSender 未配置，模拟发送邮件 给 {}，orderId={} ", req.getToEmail(), req.getOrderId());
+                return Result.success("邮件发送（模拟）成功");
+            }
+
+            SimpleMailMessage message = new SimpleMailMessage();
+            String from = (mailFrom == null || mailFrom.trim().isEmpty()) ? "no-reply@localhost" : mailFrom;
+            message.setFrom(from);
+            message.setTo(req.getToEmail());
+            message.setSubject("发货成功 - 订单 " + req.getOrderId());
+            String text = String.format("您好，\n\n您的订单 %s 已发货。感谢您的购买！\n\n祝好，\n%s", req.getOrderId(), "商城团队");
+            message.setText(text);
+            mailSender.send(message);
+            log.info("已发送发货邮件 到 {}，orderId={}", req.getToEmail(), req.getOrderId());
+            return Result.success("邮件发送成功");
+        } catch (Exception e) {
+            log.error("发送发货邮件异常", e);
+            return Result.fail("发送邮件失败：" + e.getMessage());
+        }
+    }
+
+    // 简单请求体类
+    public static class SendEmailRequest {
+        private String toEmail;
+        private String orderId;
+
+        public String getToEmail() {
+            return toEmail;
+        }
+
+        public void setToEmail(String toEmail) {
+            this.toEmail = toEmail;
+        }
+
+        public String getOrderId() {
+            return orderId;
+        }
+
+        public void setOrderId(String orderId) {
+            this.orderId = orderId;
         }
     }
 }

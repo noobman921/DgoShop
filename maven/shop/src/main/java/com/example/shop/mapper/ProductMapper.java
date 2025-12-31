@@ -24,7 +24,7 @@ public interface ProductMapper {
          * @param name 商品名称（模糊匹配）
          * @return 符合条件的商品总数
          */
-        @Select("SELECT COUNT(*) FROM product WHERE product_name LIKE CONCAT('%', #{name}, '%')")
+        @Select("SELECT COUNT(*) FROM product WHERE product_name LIKE CONCAT('%', #{name}, '%') AND is_on_shelf = 1")
         Integer selectCountByName(@Param("name") String name);
 
         /**

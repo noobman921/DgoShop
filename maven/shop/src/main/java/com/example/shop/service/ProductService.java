@@ -132,13 +132,13 @@ public class ProductService {
      */
     @Transactional(rollbackFor = Exception.class)
     public Long decreaseStock(Long productId, Integer quantity) {
-        // 1. 参数校验（保留原规则）
+        // 参数校验
         if (productId == null || productId <= 0 || quantity == null || quantity <= 0) {
             log.warn("库存更新失败：参数非法（productId={}, quantity={}）", productId, quantity);
             return -1L;
         }
 
-        // 2. 查询商品及当前库存
+        // 查询商品及当前库存
         Product product = productMapper.selectByProductId(productId);
         if (product == null) {
             log.error("库存更新失败：商品ID={}不存在", productId);
@@ -146,23 +146,23 @@ public class ProductService {
         }
         Integer currentStock = product.getStock();
 
-        // 3. 校验库存是否充足
+        // 校验库存是否充足
         if (currentStock < quantity) {
             log.error("库存更新失败：商品ID={}库存不足（当前{}，需扣减{}）", productId, currentStock, quantity);
             return 0L;
         }
 
-        // 4. 计算新库存
+        // 计算新库存
         Integer newStock = currentStock - quantity;
 
-        // 5. 执行库存更新（带并发校验：仅当更新前库存未变时生效）
+        // 执行库存更新
         int updateCount = productMapper.updateStockByProductId(productId, newStock, currentStock);
         if (updateCount == 0) {
             log.warn("库存更新失败：商品ID={}库存已被其他请求修改（更新前库存：{}）", productId, currentStock);
             return 0L;
         }
 
-        // 6. 更新成功，返回商品ID（保留原返回规则）
+        // 更新成功，返回商品ID
         log.info("商品ID={}库存更新成功：原{} → 新{}", productId, currentStock, newStock);
         return productId;
     }
@@ -176,7 +176,7 @@ public class ProductService {
      * @return 完整分页结果（列表+总数）
      */
     public PageResultVO<Product> getProductByMerchantIdPage(Long merchantId, Integer pageNo, Integer pageSize) {
-        // 1. 参数校验 & 兜底
+        // 参数校验 & 兜底
         if (merchantId == null || merchantId <= 0) {
             return new PageResultVO<>(0, 0, pageNo, pageSize, Collections.emptyList());
         }
@@ -187,17 +187,17 @@ public class ProductService {
             pageSize = 10; // 默认每页10条
         }
 
-        // 2. 计算偏移量
+        // 计算偏移量
         Integer offset = (pageNo - 1) * pageSize;
 
-        // 3. 查询列表 + 总数
+        // 查询列表 + 总数
         List<Product> productList = productMapper.selectByMerchantIdPage(merchantId, offset, pageSize);
         Integer total = productMapper.selectCountByMerchantId(merchantId);
 
-        // 4. 计算总页数
+        // 计算总页数
         Integer pages = total == 0 ? 0 : (total + pageSize - 1) / pageSize;
 
-        // 5. 返回统一分页VO
+        // 返回统一分页VO
         return new PageResultVO<>(total, pages, pageNo, pageSize, productList);
     }
 }

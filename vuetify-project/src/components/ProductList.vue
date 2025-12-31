@@ -9,9 +9,9 @@
     />
 
     <template v-else>
-      <!-- 无数据提示 -->
+      <!-- 无数据提示：加容错，确保productList是数组 -->
       <v-alert
-        v-if="productList.length === 0"
+        v-if="Array.isArray(productList) && productList.length === 0"
         variant="text"
         color="grey-lighten-2"
         class="my-8"
@@ -20,15 +20,15 @@
         <div class="text-center text-gray-500">{{ emptyText }}</div>
       </v-alert>
 
-      <div class="product-grid my-4" v-else>
+      <div class="product-grid my-4" v-else-if="Array.isArray(productList)">
         <div 
           v-for="(item, index) in productListWithEmpty" 
-          :key="index" 
+          :key="`product-${index}-${item?.productId || 'empty'}`"  
           class="product-item"
         >
           <div v-if="!item" class="empty-placeholder h-full"></div>
           
-          <!-- 商品卡片：用原生CSS控制图片容器尺寸 -->
+          <!-- 商品卡片：用原生CSS控制图片容器尺寸 + 加可选链容错 -->
           <v-card 
             v-else 
             elevation="2" 
@@ -37,33 +37,33 @@
             @click="openProductDetail(item)"
             style="cursor: pointer"
           >
-            <!-- 修复：替换h-[200px]为原生CSS height:200px -->
             <div class="img-container" style="height: 200px; width: 100%; overflow: hidden;">
               <v-img
-                :src="getProductImgUrl(item.productPic)"
+                :src="getProductImgUrl(item?.productPic)" 
                 style="height: 100%; width: 100%; object-fit: cover;"
                 @error="handleImgError"
               >
               </v-img>
             </div>
-            <!-- 商品信息 -->
+            <!-- 商品信息：加可选链容错 -->
             <v-card-text class="pt-2 px-3">
-              <h3 class="text-subtitle-1 font-medium mb-1 truncate">{{ item.productName }}</h3>
-              <p class="text-primary text-h6 font-bold">¥{{ item.productPrice }}</p>
-              <p class="text-caption text-gray-500">库存：{{ item.stock }}件</p>
+              <h3 class="text-subtitle-1 font-medium mb-1 truncate">{{ item?.productName || '暂无名称' }}</h3>
+              <p class="text-primary text-h6 font-bold">¥{{ item?.productPrice || 0 }}</p>
+              <p class="text-caption text-gray-500">库存：{{ item?.stock || 0 }}件</p>
             </v-card-text>
           </v-card>
         </div>
       </div>
     </template>
 
+    <!-- 分页组件：【修改2】修复分页触发事件+显示条件 -->
     <v-pagination
-      v-if="total >= 0"
+      v-if="total > 0 && totalPages > 1" 
       v-model="localCurrentPage"
       :length="totalPages"
       :disabled="loading"
       color="primary"
-      @input="handlePageChange"
+      @update:modelValue="handlePageChange" 
       class="justify-center my-4"
     />
 
@@ -83,11 +83,11 @@
         <v-card-text class="px-6 py-4">
           <v-container fluid class="pa-0">
             <v-row no-gutters class="gap-6">
-              <!-- 左侧：商品图片 - 修复h-[300px]为原生CSS -->
+              <!-- 左侧：商品图片 - 加可选链容错 -->
               <v-col cols="12" md="6" class="d-flex justify-center align-center">
                 <div style="height: 300px; width: 100%; max-width: 300px; overflow: hidden; border-radius: 8px;">
                   <v-img
-                    :src="getProductImgUrl(selectedProduct.productPic)"
+                    :src="getProductImgUrl(selectedProduct?.productPic)" 
                     style="height: 100%; width: 100%; object-fit: cover;"
                     @error="handleImgError"
                   >
@@ -95,12 +95,12 @@
                 </div>
               </v-col>
 
-              <!-- 右侧商品信息：无语法错误 -->
+              <!-- 右侧商品信息：加可选链容错 -->
               <v-col cols="12" md="6" class="d-flex flex-column justify-center">
-                <h3 class="text-h4 font-bold mb-2">{{ selectedProduct.productName }}</h3>
-                <p class="text-gray-600 mb-4">{{ selectedProduct.productDesc || '暂无商品描述' }}</p>
-                <p class="text-primary text-h3 font-bold mb-2">¥{{ selectedProduct.productPrice }}</p>
-                <p class="text-caption text-gray-500 mb-6">库存：{{ selectedProduct.stock }}件</p>
+                <h3 class="text-h4 font-bold mb-2">{{ selectedProduct?.productName || '暂无名称' }}</h3>
+                <p class="text-gray-600 mb-4">{{ selectedProduct?.productDesc || '暂无商品描述' }}</p>
+                <p class="text-primary text-h3 font-bold mb-2">¥{{ selectedProduct?.productPrice || 0 }}</p>
+                <p class="text-caption text-gray-500 mb-6">库存：{{ selectedProduct?.stock || 0 }}件</p>
 
                 <div class="d-flex align-center mb-6">
                   <span class="mr-3 text-body-1">购买数量：</span>
@@ -117,7 +117,7 @@
                   <v-btn 
                     icon 
                     @click="increaseQuantity"
-                    :disabled="selectedQuantity >= selectedProduct.stock"
+                    :disabled="selectedQuantity >= (selectedProduct?.stock || 0)" 
                     variant="outlined"
                     class="mr-0"
                   >
@@ -128,7 +128,7 @@
                 <v-btn 
                   color="primary" 
                   @click="addToCart"
-                  :disabled="selectedProduct.stock <= 0"
+                  :disabled="(selectedProduct?.stock || 0) <= 0"
                   class="w-full"
                 >
                   <v-icon left>mdi-cart-plus</v-icon>
@@ -147,8 +147,9 @@
 import { ref, watch, defineProps, defineEmits, computed } from 'vue'
 import axios from 'axios'
 
-// 基础图片URL（确保后端地址正确）
-const IMG_BASE_URL = 'http://localhost:8080'
+// 【修改4】修正图片基础URL（适配后端接口路径）
+// 原接口路径：/api/product/img/products/文件名，与之前useProductNameSearch中的路径一致
+const IMG_BASE_URL = 'http://8.134.119.70:8080'
 
 // 定义Props（语法无错误）
 const props = defineProps({
@@ -176,18 +177,20 @@ watch(
   { immediate: true }
 )
 
-// 拼接图片URL（语法无错误）
 const getProductImgUrl = (picPath) => {
-  console.log(picPath)
   if (!picPath || picPath.trim() === '') {
     return ''  // 空值返回空字符串，触发error事件
   }
-  const fullUrl = `${IMG_BASE_URL}${picPath}`
-  console.log(fullUrl)
+  // 提取文件名（兼容：/opt/shop_uploads/products/xxx.jpg 或 /uploads/products/xxx.jpg 或 直接xxx.jpg）
+  const fileName = picPath.split('/').pop()
+  // 拼接正确的图片接口路径：http://8.134.119.70:8081/api/product/img/products/xxx.jpg
+  const fullUrl = `${IMG_BASE_URL}/api/product/img/products/${fileName}`
+  console.log('最终图片URL：', fullUrl)
   return fullUrl
 }
 
-// 图片加载错误处理
+
+// 图片加载错误处理（优化）
 const handleImgError = (e) => {
   // 隐藏加载失败的img
   if (e.target) {
@@ -205,14 +208,19 @@ const handleImgError = (e) => {
   }
 }
 
-// 分页切换（语法无错误）
+// 【修改6】修复分页切换逻辑（加边界校验，与处理层逻辑对齐）
 const handlePageChange = (newPage) => {
+  // 边界校验：页码不能小于1、不能大于总页数、加载中不触发
+  if (newPage < 1 || newPage > props.totalPages || props.loading) {
+    return
+  }
   emit('page-change', newPage)
 }
 
-// 补位空项（语法无错误）
+// 补位空项（加容错，确保list是数组）
 const productListWithEmpty = computed(() => {
-  const list = [...props.productList]
+  // 【修改7】容错：确保props.productList是数组
+  const list = Array.isArray(props.productList) ? [...props.productList] : []
   const remainder = list.length % 4
   if (remainder !== 0) {
     const emptyCount = 4 - remainder
@@ -223,7 +231,7 @@ const productListWithEmpty = computed(() => {
   return list
 })
 
-// 弹窗相关（语法无错误）
+// 弹窗相关（加可选链容错）
 const detailDialogVisible = ref(false)
 const selectedProduct = ref({})
 const selectedQuantity = ref(1)
@@ -245,12 +253,14 @@ const decreaseQuantity = () => {
 }
 
 const increaseQuantity = () => {
-  if (selectedQuantity.value < selectedProduct.value.stock) {
+  // 【修改8】加可选链+默认值，避免空值报错
+  const maxStock = selectedProduct.value?.stock || 0
+  if (selectedQuantity.value < maxStock) {
     selectedQuantity.value++
   }
 }
 
-// 添加购物车（语法无错误）
+// 添加购物车（保留原有逻辑，加可选链容错）
 const addToCart = async () => {
   try {
     const savedUser = localStorage.getItem('userInfo')
@@ -260,13 +270,19 @@ const addToCart = async () => {
       return
     }
     const account = JSON.parse(savedUser).username
+    // 【修改9】加可选链+空值校验
+    const productId = selectedProduct.value?.productId
+    if (!productId) {
+      alert('商品ID异常，无法添加购物车！')
+      return
+    }
     const response = await axios.post(
-      'http://localhost:8080/api/cart/add',
+      'http://8.134.119.70:8080/api/cart/add',
       null,
       {
         params: {
           account: account,
-          productId: selectedProduct.value.productId,
+          productId: productId,
           quantity: selectedQuantity.value
         }
       }

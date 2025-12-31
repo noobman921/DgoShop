@@ -63,6 +63,26 @@
       </v-card-text>
     </v-card>
 
+    <!-- 邮箱输入对话框：创建订单前要求输入接收邮件的邮箱 -->
+    <v-dialog v-model="showEmailDialog" persistent max-width="500">
+      <v-card>
+        <v-card-title>请输入接收发货邮件的邮箱</v-card-title>
+        <v-card-text>
+          <v-text-field
+            v-model="email"
+            label="邮箱"
+            type="email"
+            :rules="[(v) => !!v || '邮箱不能为空', (v) => /[\w-.]+@[\w-]+\.[a-zA-Z]{2,}/.test(v) || '请输入有效的邮箱']"
+          />
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer />
+          <v-btn text @click="() => { showEmailDialog = false; email = '' }">取消</v-btn>
+          <v-btn :loading="emailLoading || orderLoading" color="primary" @click="createOrderWithEmail">确认并创建订单</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
     <!-- 加载更多按钮 -->
     <v-btn
       v-if="hasMoreData && !loading && currentAccount"
@@ -129,6 +149,11 @@ const loading = ref(false)
 const currentAccount = ref('')
 // 新增：订单创建加载状态
 const orderLoading = ref(false)
+// 邮件输入相关
+const showEmailDialog = ref(false)
+const email = ref('')
+const emailLoading = ref(false)
+const emailRegex = /^[\w-.]+@[\w-]+\.[a-zA-Z]{2,}$/
 
 // 2. 格式化价格（兜底处理，避免数值解析错误）
 const formatPrice = (price) => {
@@ -170,7 +195,7 @@ const loadCartData = async (pageNum) => {
   loading.value = true
 
   try {
-    const baseURL = 'http://localhost:8080'
+    const baseURL = ''
     const response = await axios.get(`${baseURL}/api/cart/listpage`, {
       params: {
         account: currentAccount.value,
@@ -221,12 +246,15 @@ const handleSelectAll = (val) => {
 }
 
 // 9. 删除选中项
-const deleteSelectedItems = async () => {
+const deleteSelectedItems = async (maybeSkip) => {
+  // 兼容来自模板的点击事件（会传入 MouseEvent）和内部传入的布尔值
+  const skipConfirm = typeof maybeSkip === 'boolean' ? maybeSkip : false
+
   if (!currentAccount.value || selectedProductIds.value.length === 0) return
-  if (!confirm('确定要删除选中的购物车商品吗？')) return
+  if (!skipConfirm && !confirm('确定要删除选中的购物车商品吗？')) return
 
   try {
-    const baseURL = 'http://localhost:8080'
+    const baseURL = ''
     const deletePromises = selectedProductIds.value.map(productId => {
       return axios.post(`${baseURL}/api/cart/delete`, null, {
         params: {
@@ -256,14 +284,24 @@ const deleteSelectedItems = async () => {
 }
 
 // 10. 核心修改：确定操作（创建订单）
-const confirmOperation = async () => {
+// 打开邮箱输入弹窗，要求用户输入邮箱后再创建订单
+const confirmOperation = () => {
   if (selectedProductIds.value.length === 0 || orderLoading.value) return
-  
+  showEmailDialog.value = true
+}
+
+// 真正执行创建订单并发送邮件的函数
+const createOrderWithEmail = async () => {
+  if (!email.value || !emailRegex.test(email.value)) {
+    alert('请输入有效的邮箱地址！')
+    return
+  }
+
   // 1. 获取选中的购物车商品
   const selectedItems = cartList.value.filter(item => 
     selectedProductIds.value.includes(item.productId)
   )
-  
+
   // 2. 校验商品是否包含商家ID（OrderItem必需）
   const invalidItems = selectedItems.filter(item => !item.merchantId || item.merchantId <= 0)
   if (invalidItems.length > 0) {
@@ -275,8 +313,8 @@ const confirmOperation = async () => {
   const totalAmount = selectedItems.reduce((sum, item) => {
     return sum + Number(item.quantity) * Number(item.productPrice)
   }, 0)
-  
-  // 4. 确认创建订单
+
+  // 4. 确认创建订单（再次确认金额）
   if (!confirm(`你选中了 ${selectedItems.length} 件商品，总金额：¥${formatPrice(totalAmount)}\n是否确认创建订单？`)) {
     return
   }
@@ -287,33 +325,53 @@ const confirmOperation = async () => {
     orderItemList: selectedItems.map(item => ({
       productId: item.productId,
       quantity: item.quantity,
-      merchantId: item.merchantId // 购物车商品需包含商家ID
+      merchantId: item.merchantId
     }))
   }
 
   // 6. 发起创建订单请求
   orderLoading.value = true
+  emailLoading.value = true
   try {
-    const baseURL = 'http://localhost:8080'
+    const baseURL = ''
     const response = await axios.post(`${baseURL}/api/order/add`, orderRequest)
     const resData = response.data
 
     if (resData?.code === 200) {
-      alert(`订单创建成功！\n${resData.msg || '订单号：未知'}\n为你清空选中的购物车商品`)
-      // 创建订单成功后，删除选中的购物车商品
-      await deleteSelectedItems()
+      // 尝试从返回体获取订单号/ID
+      const orderId = resData?.data?.orderId || resData?.data?.orderNo || resData?.data || resData?.msg || '未知'
+      alert(`订单创建成功！\n订单号：${orderId}\n即将向 ${email.value} 发送发货成功邮件。`)
+
+      // 调用发送邮件接口（后端需实现相应接口）
+      try {
+        await axios.post(`${baseURL}/api/order/sendShipmentEmail`, {
+          toEmail: email.value,
+          orderId: orderId
+        })
+        alert('发货成功邮件已发送至：' + email.value)
+      } catch (sendErr) {
+        console.error('发送邮件异常：', sendErr)
+        alert('订单已创建，但发送邮件失败，请稍后重试或手动通知用户。')
+      }
+
+      // 创建订单成功后，删除选中的购物车商品（跳过二次确认）
+      await deleteSelectedItems(true)
+      // 关闭弹窗并清理
+      showEmailDialog.value = false
+      email.value = ''
     } else {
       alert(`创建订单失败：${resData?.msg || '未知错误'}`)
     }
   } catch (error) {
     console.error('创建订单异常：', error)
-    if (error.message.includes('Network Error')) {
+    if (error.message && error.message.includes('Network Error')) {
       alert('网络错误，请检查后端订单服务是否启动！')
     } else {
       alert('创建订单失败，请重试！')
     }
   } finally {
     orderLoading.value = false
+    emailLoading.value = false
   }
 }
 

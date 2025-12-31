@@ -151,7 +151,7 @@ public class OrderMainService {
         // 调用内嵌的生成方法，生成唯一订单号（作为主键）
         String orderNo = this.generateOrderNo();
 
-        // 封装订单主实体（仅赋值orderNo和userId）
+        // 封装订单主实体
         OrderMain orderMain = new OrderMain();
         orderMain.setOrderNo(orderNo); // 主键赋值
         orderMain.setUserId(userId);

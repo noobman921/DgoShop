@@ -27,12 +27,12 @@ public class MerchantService {
      * @return 商家实体（无数据返回null）
      */
     public Merchant getMerchantById(Long merchantId) {
-        // 1. 参数合法性校验
+        // 参数合法性校验
         if (merchantId == null || merchantId <= 0) {
             return null;
         }
 
-        // 2. 执行数据库查询，捕获异常
+        // 执行数据库查询，捕获异常
         try {
             Merchant merchant = merchantMapper.selectByMerchantId(merchantId);
             return merchant;
@@ -48,12 +48,12 @@ public class MerchantService {
      * @return 商家实体（无数据返回null）
      */
     public Merchant getMerchantByAccount(String account) {
-        // 1. 参数合法性校验
+        // 参数合法性校验
         if (!StringUtils.hasText(account)) {
             return null;
         }
 
-        // 2. 执行数据库查询，捕获异常
+        // 执行数据库查询，捕获异常
         try {
             Merchant merchant = merchantMapper.selectByAccount(account);
             return merchant;
@@ -69,12 +69,12 @@ public class MerchantService {
      * @return 商家列表（无数据返回空列表，避免NPE）
      */
     public List<Merchant> listMerchantByMerchantName(String merchantName) {
-        // 1. 参数合法性校验
+        // 参数合法性校验
         if (!StringUtils.hasText(merchantName)) {
             return Collections.emptyList(); // 返回空列表，避免调用方空指针
         }
 
-        // 2. 执行数据库查询，捕获异常
+        // 执行数据库查询，捕获异常
         try {
             List<Merchant> merchantList = merchantMapper.selectListByMerchantName(merchantName);
             return merchantList;
@@ -90,7 +90,7 @@ public class MerchantService {
      * @return 新增成功返回true，失败返回false
      */
     public boolean addMerchant(Merchant merchant) {
-        // 1. 全量参数校验
+        // 全量参数校验
         if (merchant == null) {
             return false;
         }
@@ -104,13 +104,13 @@ public class MerchantService {
             return false;
         }
 
-        // 2. 校验账号唯一性（避免数据库重复插入报错）
+        // 校验账号唯一性（避免数据库重复插入报错）
         Merchant existMerchant = this.getMerchantByAccount(merchant.getAccount());
         if (existMerchant != null) {
             return false;
         }
 
-        // 3. 执行插入操作，捕获异常
+        // 执行插入操作，捕获异常
         try {
             int affectRows = merchantMapper.insertMerchant(merchant);
             boolean success = affectRows > 0;

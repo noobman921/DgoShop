@@ -278,7 +278,7 @@ import { useMerchantStore } from '@/stores/merchantStore'
 import axios from 'axios'
 
 // 基础配置
-axios.defaults.baseURL = 'http://localhost:8080'
+axios.defaults.baseURL = ''
 axios.defaults.timeout = 10000
 axios.defaults.withCredentials = true
 
@@ -288,7 +288,9 @@ const merchantStore = useMerchantStore()
 
 // 响应式数据
 const drawer = ref(true)
-const merchantId = ref(merchantStore.merchantId || localStorage.getItem('merchantId'))
+const merchantId = ref(
+  Number(merchantStore.merchantId) || Number(localStorage.getItem('merchantId')) || null
+)
 const pageNo = ref(1)
 const pageSize = ref(10)
 const total = ref(0)
@@ -311,8 +313,8 @@ const previewUrl = ref('')
 // 表单数据
 const addProductForm = reactive({ 
   productName: '', 
-  price: '', 
-  stock: '',
+  price: 0, 
+  stock: 0,
   productDesc: ''
 })
 const updateStockForm = reactive({ productId: '', productName: '', newStock: '' })
@@ -338,9 +340,11 @@ const getProductList = async () => {
     const res = await axios.get('/api/merchant/log/product/page', {
       params: { merchantId: merchantId.value, pageNo: pageNo.value, pageSize: pageSize.value }
     })
-    productList.value = res.data.list || []
-    total.value = res.data.total || 0
-    pages.value = res.data.pages || 0
+    // 兼容后端不同返回结构：优先尝试 res.data.data，再退回 res.data
+    const dataBody = res.data?.data || res.data || {}
+    productList.value = dataBody.list || dataBody.records || res.data.list || []
+    total.value = dataBody.total || dataBody.count || res.data.total || 0
+    pages.value = dataBody.pages || dataBody.totalPages || res.data.pages || (total.value ? Math.ceil(Number(total.value) / Number(pageSize.value)) : 0)
   } catch (error) {
     console.error('获取商品列表失败：', error)
     showSnackbar('获取商品列表失败，请重试', 'teal-darken-1')
@@ -393,7 +397,10 @@ const openUpdateStockDialog = (product = selectedProduct.value) => {
 
 // 添加商品：无修改
 const handleAddProduct = async () => {
-  if (!addProductFormRef.value.validate()) return
+  if (!addProductFormRef.value || !addProductFormRef.value.validate()) {
+    showSnackbar('请完善所有必填项', 'teal-darken-1')
+    return
+  }
   if (!merchantId.value) {
     showSnackbar('未获取到商家ID，请重新登录', 'teal-darken-1')
     return
@@ -401,23 +408,55 @@ const handleAddProduct = async () => {
 
   try {
     const formData = new FormData()
-    formData.append('productName', addProductForm.productName)
-    formData.append('productPrice', addProductForm.price)
-    formData.append('stock', addProductForm.stock)
-    formData.append('merchantId', merchantId.value)
-    formData.append('productDesc', addProductForm.productDesc || '')
-
-    if (selectedFile.value && selectedFile.value.length > 0) {
-      formData.append('file', selectedFile.value[0])
+    // 修复1：提前校验价格（避免初始值0导致后端校验失败，掩盖文件问题）
+    const productPrice = Number(addProductForm.price)
+    if (productPrice <= 0) {
+      showSnackbar('商品定价必须大于0', 'teal-darken-1')
+      return
     }
 
-    await axios.post('/api/merchant/log/product/add', formData)
+    // 原有参数处理（保留）
+    formData.append('productName', addProductForm.productName.trim())
+    formData.append('productPrice', productPrice) // 使用校验后的价格
+    formData.append('stock', Number(addProductForm.stock))
+    formData.append('merchantId', merchantId.value)
+    formData.append('productDesc', addProductForm.productDesc.trim() || '')
+
+    // 修复2：新增调试日志，确认文件是否正确添加
+    console.log('选中的文件对象：', selectedFile.value)
+    let uploadFile = null;
+    if (selectedFile.value && selectedFile.value.length > 0) {
+      uploadFile = selectedFile.value[0];
+    }
+    else if(selectedFile.value instanceof File){
+      uploadFile = selectedFile.value;
+    }
+    if (uploadFile) {
+      formData.append('file', uploadFile);
+      console.log('成功添加文件到FormData：', uploadFile.name);
+    } else {
+      console.log('未选中文件/文件为空，跳过文件添加');
+    }
+
+    // 修复3：简化请求配置（全局已配withCredentials，移除冗余Accept头）
+    await axios.post('/api/merchant/log/product/add', formData, {
+      maxContentLength: Number.POSITIVE_INFINITY, // 兼容大文件（替代Infinity，避免兼容性问题）
+      maxBodyLength: Number.POSITIVE_INFINITY
+    })
+    
     showSnackbar('商品添加成功')
     addDialogShow.value = false
     getProductList()
   } catch (error) {
     console.error('添加商品失败：', error)
-    const errorMsg = error.response?.data?.msg || '添加商品失败，请重试'
+    // 增强错误日志：打印完整响应信息，便于排查
+    console.error('错误详情：', {
+      responseData: error.response?.data,
+      status: error.response?.status,
+      message: error.message
+    })
+    const errorMsg = error.response?.data?.msg 
+      || (error.code === 'ERR_NETWORK' ? '网络错误' : '添加商品失败，请重试')
     showSnackbar(errorMsg, 'teal-darken-1')
   }
 }

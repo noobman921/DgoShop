@@ -156,7 +156,7 @@ const loadOrderData = async (pageNum = 1) => {
   loading.value = true
 
   try {
-    const baseURL = 'http://localhost:8080'
+    const baseURL = ''
     const response = await axios.get(`${baseURL}/api/order/page`, {
       params: {
         userAccount: currentAccount.value,

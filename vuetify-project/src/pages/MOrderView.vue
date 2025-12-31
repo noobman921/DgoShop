@@ -122,7 +122,7 @@ import { useMerchantStore } from '@/stores/merchantStore'
 import axios from 'axios'
 
 // 基础配置：与商品页保持一致
-axios.defaults.baseURL = 'http://localhost:8080'
+axios.defaults.baseURL = ''
 axios.defaults.timeout = 10000
 axios.defaults.withCredentials = true
 
@@ -161,9 +161,13 @@ const getOrderItemList = async () => {
     const res = await axios.get('/api/merchant/log/order-item/page', {
       params: { merchantId: merchantId.value, pageNo: pageNo.value, pageSize: pageSize.value }
     })
-    orderItemList.value = res.data.list || []
-    total.value = res.data.total || 0
-    pages.value = res.data.pages || 0
+    // 兼容后端不同返回结构：优先尝试 res.data.data，再退回 res.data
+    const dataBody = res.data?.data || res.data || {}
+    orderItemList.value = dataBody.list || dataBody.records || res.data.list || []
+    // total 可能命名为 total 或 count
+    total.value = dataBody.total || dataBody.count || res.data.total || 0
+    // pages 可能不存在，若缺失则根据 total 和 pageSize 计算
+    pages.value = dataBody.pages || dataBody.totalPages || res.data.pages || (total.value ? Math.ceil(Number(total.value) / Number(pageSize.value)) : 0)
   } catch (error) {
     console.error('获取订单列表失败：', error)
     showSnackbar('获取订单列表失败，请重试', 'teal-darken-1')

@@ -8,7 +8,7 @@ export const useAuthStore = defineStore('auth', () => {
 
   // 登录
   const login = async (userData) => {
-    const response = await axios.get('http://localhost:8080/api/user/log/login', {
+    const response = await axios.get('/api/user/log/login', {
         params: {
           username: userData.username,
           password: userData.password
@@ -27,7 +27,7 @@ export const useAuthStore = defineStore('auth', () => {
 
   // 注册
   const register = async (userData) => {
-    const response = await axios.get('http://localhost:8080/api/user/log/reg', {
+    const response = await axios.get('/api/user/log/reg', {
         params: {
           username: userData.username,
           password: userData.password

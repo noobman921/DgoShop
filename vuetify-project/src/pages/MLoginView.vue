@@ -108,7 +108,7 @@ import { useMerchantStore } from '@/stores/merchantStore'
 import axios from 'axios'
 
 // 基础配置
-axios.defaults.baseURL = 'http://localhost:8080'
+axios.defaults.baseURL = ''
 axios.defaults.timeout = 10000
 axios.defaults.withCredentials = true
 

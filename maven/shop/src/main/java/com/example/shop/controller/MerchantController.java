@@ -24,6 +24,9 @@ import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * 商家专属Controller
  * 风格对齐UserController：GET请求+RequestParam传参+Result响应体
@@ -42,8 +45,10 @@ public class MerchantController {
     @Autowired
     private ProductService productService;
 
+    private static final Logger log = LoggerFactory.getLogger(ProductController.class);
+
     // ========== 新增：注入图片上传路径（从application.yml读取） ==========
-    @Value("${upload.path:D:/shop_uploads/products/}") // 默认路径，防止配置缺失
+    @Value("${upload.path:/opt/shop_uploads/products/}") // 默认路径，防止配置缺失
     private String uploadPath;
 
     // ========== 原有所有方法完全保留（登录/注册/查订单/查商品/更新库存） ==========
@@ -183,8 +188,7 @@ public class MerchantController {
         }
     }
 
-    // ========== 新增核心：添加商品接口（含图片上传） ==========
-    @PostMapping("/product/add") // POST请求，支持文件上传
+    @RequestMapping("/product/add")
     public Result<Product> addProduct(
             // 商品基本信息（必填）
             @RequestParam("productName") String productName,
@@ -196,57 +200,94 @@ public class MerchantController {
             // 商品图片（可选，MultipartFile接收文件）
             @RequestParam(value = "file", required = false) MultipartFile file) {
 
-        // ========== 1. 参数校验 ==========
-        // 必填参数校验
+        // ========== 1. 打印入参（第一步：确认参数是否接收成功） ==========
+        log.info("===== 开始执行添加商品接口 =====");
+        log.info("接收的入参：productName={}, productPrice={}, stock={}, merchantId={}, productDesc={}",
+                productName, productPrice, stock, merchantId, productDesc);
+        // 打印文件核心信息（是否为空、文件名、大小）
+        if (file == null) {
+            log.info("接收的文件：file=null（未上传图片）");
+        } else {
+            log.info("接收的文件：fileName={}, fileSize={}KB, isEmpty={}",
+                    file.getOriginalFilename(), file.getSize() / 1024, file.isEmpty());
+        }
+
+        // ========== 2. 参数校验 ==========
+        log.info("===== 开始参数校验 =====");
         if (!StringUtils.hasText(productName)) {
+            log.error("参数校验失败：商品名称不能为空");
             return Result.fail("商品名称不能为空");
         }
         if (productPrice == null || productPrice.compareTo(BigDecimal.ZERO) <= 0) {
+            log.error("参数校验失败：商品价格必须大于0，当前值={}", productPrice);
             return Result.fail("商品价格必须大于0");
         }
         if (stock == null || stock < 0) {
+            log.error("参数校验失败：库存数量不能为负数，当前值={}", stock);
             return Result.fail("库存数量不能为负数");
         }
         if (merchantId == null || merchantId <= 0) {
+            log.error("参数校验失败：商家ID不能为空且必须大于0，当前值={}", merchantId);
             return Result.fail("商家ID不能为空且必须大于0");
         }
+        log.info("参数校验通过");
 
-        // ========== 2. 处理图片上传（可选） ==========
+        // ========== 3. 处理图片上传（可选） ==========
         String productPic = ""; // 商品图片相对路径（存入数据库）
         if (file != null && !file.isEmpty()) {
+            log.info("===== 开始处理图片上传 =====");
             try {
-                // 2.1 校验图片格式（仅允许jpg/png/jpeg/webp）
+                // 3.1 校验图片格式（仅允许jpg/png/jpeg/webp）
                 String originalFilename = file.getOriginalFilename();
+                log.info("原始文件名：{}", originalFilename);
                 String suffix = originalFilename.substring(originalFilename.lastIndexOf("."));
+                log.info("文件后缀：{}", suffix);
+
                 if (!suffix.equalsIgnoreCase(".jpg") && !suffix.equalsIgnoreCase(".png")
                         && !suffix.equalsIgnoreCase(".jpeg") && !suffix.equalsIgnoreCase(".webp")) {
+                    log.error("图片格式校验失败：仅支持jpg/png/jpeg/webp，当前后缀={}", suffix);
                     return Result.fail("仅支持jpg/png/jpeg/webp格式的图片！");
                 }
+                log.info("图片格式校验通过");
 
-                // 2.2 生成唯一文件名（时间戳 + 随机数 + 后缀，避免重复）
+                // 3.2 生成唯一文件名（时间戳 + 随机数 + 后缀，避免重复）
                 SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd_HHmmss");
                 String fileName = sdf.format(new Date()) + "_" + UUID.randomUUID().toString().substring(0, 6) + suffix;
+                log.info("生成唯一文件名：{}", fileName);
 
-                // 2.3 创建存储目录（如果不存在）
+                // 3.3 创建存储目录（如果不存在）
                 File destDir = new File(uploadPath);
+                log.info("图片存储目录：{}，目录是否存在：{}", uploadPath, destDir.exists());
                 if (!destDir.exists()) {
-                    destDir.mkdirs(); // 递归创建目录
+                    boolean mkdirsResult = destDir.mkdirs(); // 递归创建目录
+                    log.info("目录不存在，执行创建，创建结果：{}", mkdirsResult);
+                    if (!mkdirsResult) {
+                        log.error("目录创建失败：{}", uploadPath);
+                        return Result.fail("图片存储目录创建失败，请检查路径权限");
+                    }
                 }
 
-                // 2.4 保存图片到本地磁盘
+                // 3.4 保存图片到本地磁盘
                 File destFile = new File(uploadPath + fileName);
+                log.info("目标文件完整路径：{}，文件是否已存在：{}", destFile.getAbsolutePath(), destFile.exists());
                 file.transferTo(destFile);
+                log.info("图片保存成功，保存路径：{}", destFile.getAbsolutePath());
 
-                // 2.5 生成图片相对路径（前端可通过 http://localhost:8080 + 路径 访问）
+                // 3.5 生成图片相对路径（前端可通过 http://localhost:8080 + 路径 访问）
                 productPic = "/uploads/products/" + fileName;
+                log.info("生成图片相对路径：{}", productPic);
 
             } catch (IOException e) {
-                e.printStackTrace();
+                // 打印完整异常堆栈（不止getMessage，能看到具体错误行）
+                log.error("图片上传失败！", e);
                 return Result.fail("图片上传失败：" + e.getMessage());
             }
+        } else {
+            log.info("未上传图片，跳过图片处理流程");
         }
 
-        // ========== 3. 构造商品对象并保存 ==========
+        // ========== 4. 构造商品对象并保存 ==========
+        log.info("===== 开始构造商品对象并保存 =====");
         Product product = new Product();
         product.setProductName(productName);
         product.setProductDesc(StringUtils.hasText(productDesc) ? productDesc : ""); // 描述为空则设空字符串
@@ -255,14 +296,18 @@ public class MerchantController {
         product.setProductPrice(productPrice);
         product.setMerchantId(merchantId);
         product.setIsOnShelf(1);
+        log.info("构造的商品对象：{}", product.toString()); // 确保Product类重写了toString()
 
         // 调用service保存商品
+        log.info("调用productService.addProduct()保存商品");
         long addSuccess = productService.addProduct(product);
+        log.info("商品保存结果：addSuccess={}", addSuccess);
+
         if (addSuccess > 0) {
-            // 保存成功后，返回完整的商品对象（含自增的productId）
-            // 注意：如果你的addProduct方法不返回自增ID，需要调整service，这里假设保存后productId已赋值
+            log.info("商品添加成功，返回商品对象：{}", product);
             return Result.success(product);
         } else {
+            log.error("商品添加失败，保存结果addSuccess={}", addSuccess);
             return Result.fail("商品添加失败，请重试");
         }
     }

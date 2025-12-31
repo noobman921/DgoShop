@@ -10,7 +10,6 @@ import java.util.List;
  */
 @Data
 public class OrderAddRequestVO {
-    private String userAccount; // 用户账号（必传）
-    private List<OrderItem> orderItemList; // 订单项目列表（每个项含merchantId，必传）
-    // 移除merchantId字段：不再全局传，仅在每个OrderItem中传
+    private String userAccount; // 用户账号
+    private List<OrderItem> orderItemList; // 订单项目列表
 }

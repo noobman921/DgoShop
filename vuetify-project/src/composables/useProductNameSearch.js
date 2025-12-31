@@ -20,7 +20,7 @@ export const useProductNameSearch = () => {
     loading.value = true
     try {
       // 对接后端接口（替换为你的实际接口路径）
-      const response = await axios.get('http://localhost:8080/api/product/productName', {
+      const response = await axios.get('/api/product/productName', {
         params: {
           name: currentKeyword.value,
           pageNum: currentPage.value,
@@ -30,10 +30,13 @@ export const useProductNameSearch = () => {
 
       const resData = response.data
       if (resData.code === 200) { // 匹配后端成功码
-        productList.value = resData.data.list || []
+        // 兼容后端返回字段：优先尝试常见的 list / records
+        const dataBody = resData.data || {}
+        productList.value = dataBody.list || dataBody.records || []
         console.log(productList.value)
-        total.value = resData.data.total || 0
-        totalPages.value = resData.data.pages || 0
+        // 兼容 total 字段名（total 或 count），以及 pages
+        total.value = dataBody.total || dataBody.count || 0
+        totalPages.value = dataBody.pages || dataBody.totalPages || 0
       } else {
         throw new Error(resData.msg || '查询商品失败')
       }
