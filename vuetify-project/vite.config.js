@@ -14,6 +14,7 @@ import { fileURLToPath, URL } from 'node:url'
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  base: '/',
   plugins: [
     VueRouter(),
     Layouts(),
@@ -50,6 +51,22 @@ export default defineConfig({
       vueTemplate: true,
     }),
   ],
+  build: {
+    outDir: 'dist', // 打包输出目录（默认dist，显式声明更清晰）
+    assetsDir: 'assets', // 静态资源根目录（所有静态资源都放这里）
+    rollupOptions: {
+      output: {
+        // 关键：动态导入的chunk文件输出到 assets 目录
+        chunkFileNames: 'assets/[name]-[hash].js', 
+        // 入口文件也统一输出到 assets（可选，但保持路径一致）
+        entryFileNames: 'assets/[name]-[hash].js',
+        // 静态资源（css/图片/字体）也输出到 assets
+        assetFileNames: 'assets/[name]-[hash].[ext]',
+      },
+    },
+    // 可选：禁用压缩（便于调试，上线前开启）
+    // minify: false,
+  },
   optimizeDeps: {
     exclude: [
       'vuetify',

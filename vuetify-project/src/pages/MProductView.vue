@@ -16,17 +16,19 @@
       
       <v-list dense nav class="text-teal-darken-4" style="overflow-y: auto;">
         <v-list-item
-          :to="{ name: 'MerchantProduct' }"
+          @click.prevent="navigate('/merchant/product')"
           :active="isActive('MerchantProduct')"
           class="hover:bg-teal-lighten-2 transition-colors"
+          style="cursor: pointer;"
         >
           <v-list-item-icon><v-icon>mdi-cube</v-icon></v-list-item-icon>
           <v-list-item-title class="text-lg">商品管理</v-list-item-title>
         </v-list-item>
         <v-list-item
-          :to="{ name: 'MerchantOrder' }"
+          @click.prevent="navigate('/merchant/order')"
           :active="isActive('MerchantOrder')"
           class="hover:bg-teal-lighten-2 transition-colors"
+          style="cursor: pointer;"
         >
           <v-list-item-icon><v-icon>mdi-file-document</v-icon></v-list-item-icon>
           <v-list-item-title class="text-lg">订单管理</v-list-item-title>
@@ -329,6 +331,11 @@ const showSnackbar = (message, color = 'teal') => {
 
 // 路由激活判断
 const isActive = (routeName) => route.name === routeName
+
+// 强制全页跳转，避免运行时动态 import 使用错误的相对路径
+const navigate = (path) => {
+  window.location.href = path
+}
 
 // 获取商品列表：无修改
 const getProductList = async () => {

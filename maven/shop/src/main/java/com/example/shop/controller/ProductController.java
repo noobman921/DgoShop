@@ -25,12 +25,10 @@ public class ProductController {
     @Autowired
     private ProductService productService;
 
-    // 新增：读取配置文件中的图片上传路径（和你application.properties中的upload.path对应）
     @Value("${upload.path}")
     private String uploadPath;
 
     /**
-     * 新增：图片访问接口
      * GET /api/product/img/products/{fileName} → 返回图片二进制流
      */
     @GetMapping("/img/products/{fileName}")
@@ -46,7 +44,6 @@ public class ProductController {
 
             // 设置响应头：指定图片类型、文件大小，避免浏览器解析错误
             HttpHeaders headers = new HttpHeaders();
-            // 兼容jpg/png/webp（根据文件后缀自动判断，更通用）
             String fileType = fileName.substring(fileName.lastIndexOf(".") + 1).toLowerCase();
             switch (fileType) {
                 case "png":
